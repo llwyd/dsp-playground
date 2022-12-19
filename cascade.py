@@ -41,55 +41,33 @@ sig_len = 8192 * 8
 wav_pink = norm(wav_pink) * gain ( -50 )
 
 
-lpf = LPF( order, 10, 1, fs, sig_len )
+cutoff = [1, 10, 100, 1000, 10000 ]
+current_gain = 1
 
-lpf_0 = signal.butter(order, 4,'lp',fs=fs,output='sos')
-lpf_1 = signal.butter(order, 16,'lp',fs=fs,output='sos')
-lpf_2 = signal.butter(order, 64,'lp',fs=fs,output='sos')
-lpf_3 = signal.butter(order, 256,'lp',fs=fs,output='sos')
-lpf_4 = signal.butter(order, 1024,'lp',fs=fs,output='sos')
-lpf_5 = signal.butter(order, 4096,'lp',fs=fs,output='sos')
-lpf_6 = signal.butter(order, 16384,'lp',fs=fs,output='sos')
+lpf = []
+for i in range( len( cutoff ) ):
+    lpf.append( LPF(order, cutoff[i], current_gain, fs, sig_len ) )
+    current_gain = current_gain -6
 
-h = signal.unit_impulse(sig_len)
+dirac = signal.unit_impulse(sig_len)
 
-x_0 = signal.sosfilt(lpf_0, h ) * gain( -6 * 1 )
-x_1 = signal.sosfilt(lpf_1, h ) * gain( -6 * 2 )
-x_2 = signal.sosfilt(lpf_2, h ) * gain( -6 * 3)
-x_3 = signal.sosfilt(lpf_3, h ) * gain( -6 * 4)
-x_4 = signal.sosfilt(lpf_4, h ) * gain( -6 * 5)
-x_5 = signal.sosfilt(lpf_5, h ) * gain( -6 * 6)
-x_6 = signal.sosfilt(lpf_6, h ) * gain( -6 * 7)
+x = []
+for i in range( len( cutoff ) ):
+    x.append( signal.sosfilt( lpf[i].filter, dirac ) * gain( lpf[i].gain ) )
 
 
-y_0 = signal.sosfilt(lpf_0, h ) * gain( -6 * 1 ) 
-y_1 = signal.sosfilt(lpf_1, h ) * gain( -6 * 2 ) 
-y_2 = signal.sosfilt(lpf_2, h ) * gain( -6 * 3 ) 
-y_3 = signal.sosfilt(lpf_3, h ) * gain( -6 * 4 ) 
-y_4 = signal.sosfilt(lpf_4, h ) * gain( -6 * 5 ) 
-y_5 = signal.sosfilt(lpf_5, h ) * gain( -6 * 6 ) 
-y_6 = signal.sosfilt(lpf_6, h ) * gain( -6 * 7 ) 
+y = np.zeros(sig_len)
+for i in range( len( cutoff ) ):
+    y = y + x[i]
 
-x = y_0 + y_1 + y_2 + y_3 + y_4 + y_5 + y_6
 
-X_0, Xf_0, Xdb_0 = fft( x_0, fs, sig_len)
-X_1, Xf_1, Xdb_1 = fft( x_1, fs, sig_len)
-X_2, Xf_2, Xdb_2 = fft( x_2, fs, sig_len)
-X_3, Xf_3, Xdb_3 = fft( x_3, fs, sig_len)
-X_4, Xf_4, Xdb_4 = fft( x_4, fs, sig_len)
-X_5, Xf_5, Xdb_5 = fft( x_5, fs, sig_len)
-X_6, Xf_6, Xdb_6 = fft( x_6, fs, sig_len)
-X, Xf, Xdb = fft( x, fs, sig_len)
+Y, Yf, Ydb = fft( y, fs, sig_len)
 P, Pf, Pdb = fft( wav_pink, wav_fs, len(wav_pink))
 
-plt.semilogx( Xf, Xdb )
-plt.semilogx( Xf_0, Xdb_0 )
-plt.semilogx( Xf_1, Xdb_1 )
-plt.semilogx( Xf_2, Xdb_2 )
-plt.semilogx( Xf_3, Xdb_3 )
-plt.semilogx( Xf_4, Xdb_4 )
-plt.semilogx( Xf_5, Xdb_5 )
-plt.semilogx( Xf_6, Xdb_6 )
+plt.semilogx( Yf, Ydb )
+for i in range( len( cutoff ) ):
+    plt.semilogx( lpf[i].FFTf, lpf[i].FFTdb )
+
 plt.semilogx( Pf, Pdb )
 plt.ylim( -150, 10 )
 plt.xlim( 1, int(fs / 2 ) )
