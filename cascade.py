@@ -41,8 +41,8 @@ sig_len = 8192 * 8
 wav_pink = norm(wav_pink) * gain ( -50 )
 
 
-cutoff = [1, 10, 100, 1000, 10000 ]
-current_gain = 1
+cutoff = [4, 32, 256, 2048, 16384 ]
+current_gain = -6
 
 lpf = []
 for i in range( len( cutoff ) ):
