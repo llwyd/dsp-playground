@@ -15,6 +15,14 @@ def pink_filter():
 	
 	return sos
 
+def unit_impulse_filter():
+    p = [0]
+    z = [1]
+    k = 1
+
+    sos = signal.spk2sos( z, p, k )
+    return sos
+
 def voss_algorithm( bands, n ):
 	pink = np.zeros(n)
 	noise = np.zeros(bands)
@@ -61,13 +69,13 @@ sig_len = 8192 * 8
 [wav_fs, wav_pink] = wavfile.read("pink.wav")
 wav_pink = norm(wav_pink) * gain ( -50 )
 
-cutoff = [16, 128, 1024, 4096 ]
+cutoff = [1,10,100,1000]
 current_gain = -6
 
 lpf = []
 for i in range( len( cutoff ) ):
     lpf.append( LPF(order, cutoff[i], current_gain, fs, sig_len ) )
-    current_gain = current_gain -6
+    current_gain = current_gain -3
 
 dirac = signal.unit_impulse(sig_len)
 
@@ -80,9 +88,9 @@ for i in range( len( cutoff ) ):
 
 
 y = np.zeros(sig_len)
+#y = signal.unit_impulse(sig_len)
 for i in range( len( cutoff ) ):
     y = y + x[i]
-
 
 ref  = [ 0, -10, -20, -30, -40]
 reff = [ 10, 100, 1000, 10000, 100000]
@@ -93,14 +101,21 @@ PINK, PINKf, PINKdb = fft( wav_pink, wav_fs, len(wav_pink))
 
 plt.semilogx( PINKf, PINKdb )
 plt.semilogx( Yf, Ydb )
-#for i in range( len( cutoff ) ):
-#    plt.semilogx( lpf[i].FFTf, lpf[i].FFTdb )
-
 plt.semilogx( Pf, Pdb )
 plt.semilogx( reff, ref )
+plt.legend(['Audacity', 'cascade approach','RBJ','reference'])
 plt.ylim( -150, 10 )
 plt.xlim( 1, int(fs / 2 ) )
 plt.grid(which='both')
+
+plt.figure(2)
+plt.semilogx( Yf, Ydb )
+for i in range( len( cutoff ) ):
+    plt.semilogx( lpf[i].FFTf, lpf[i].FFTdb )
+plt.ylim( -150, 10 )
+plt.xlim( 1, int(fs / 2 ) )
+plt.grid(which='both')
+
 plt.show()
 
 
