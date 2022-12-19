@@ -19,6 +19,20 @@ def norm( n ):
 def gain( g ):
     return np.power(10, g / 20 )
 
+class LPF():
+    def __init__( self, order, cutoff, raw_gain, fs, sig_len ):
+        self.fs = fs
+        self.cutoff = cutoff
+        self.order = order
+        self.gain = raw_gain
+        self.sig_len = sig_len
+        self.filter = signal.butter( self.order, self.cutoff, 'lp', fs = self.fs, output = 'sos' )
+
+        dirac = signal.unit_impulse( self.sig_len )
+        self.ir = signal.sosfilt( self.filter, dirac ) * gain( raw_gain )
+
+        self.FFT, self.FFTf, self.FFTdb = fft( self.ir, self.fs, self.sig_len )
+
 fs = 48000
 order = 1
 sig_len = 8192 * 8
@@ -26,6 +40,8 @@ sig_len = 8192 * 8
 [wav_fs, wav_pink] = wavfile.read("pink.wav")
 wav_pink = norm(wav_pink) * gain ( -50 )
 
+
+lpf = LPF( order, 10, 1, fs, sig_len )
 
 lpf_0 = signal.butter(order, 4,'lp',fs=fs,output='sos')
 lpf_1 = signal.butter(order, 16,'lp',fs=fs,output='sos')
