@@ -38,10 +38,15 @@ rollover = 2**( generators - 1 )
 noise = []
 white = 0.0
 
+white_noise = NoiseGenerator()
+white_noise.Update()
+
 for i in range(generators):
     noise.append(NoiseGenerator())
     noise[i].Update()
     white = white+noise[i].value
+
+white = white+white_noise.value
 
 # Voss-McCartney pink noise algorithm
 counter = 1
@@ -50,6 +55,11 @@ for i in range(num_samples):
     #print("Counter:"+str(counter)+", Index:"+str(index))
     
     noise[index].Update()
+    white_noise.Update()
+
+    white = white - white_noise.prev_value
+    white = white + white_noise.value
+
     white = white - noise[index].prev_value;
     white = white + noise[index].value;
     x[i] = white
