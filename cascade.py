@@ -69,13 +69,13 @@ sig_len = 8192 * 8
 [wav_fs, wav_pink] = wavfile.read("pink.wav")
 wav_pink = norm(wav_pink) * gain ( -50 )
 
-cutoff = [1,10,100,1000]
+cutoff = [5.859375,23.4375,93.75,375,1500,6000,12000,16000,20000]
 current_gain = -6
 
 lpf = []
 for i in range( len( cutoff ) ):
     lpf.append( LPF(order, cutoff[i], current_gain, fs, sig_len ) )
-    current_gain = current_gain -3
+    current_gain = current_gain -6
 
 dirac = signal.unit_impulse(sig_len)
 
