@@ -36,7 +36,7 @@ def voss_algorithm( bands, n ):
 def fft(x,fs,fft_len):
     F = np.fft.fft(x,fft_len)
     F = np.abs(F)
-    #F = norm(F)
+    F = norm(F)
     Ff = (fs/2)*np.linspace(0,1,int(fft_len/2))
     Fdb = 20*np.log10(F[:int(len(F)/2)]);
     
@@ -64,23 +64,25 @@ class LPF():
 
 fs = 48000
 order = 1
-sig_len = 8192 * 8
+sig_len = 4096 * 16
 
 [wav_fs, wav_pink] = wavfile.read("pink.wav")
 wav_pink = norm(wav_pink) * gain ( -50 )
 
-cutoff = [5.859375,23.4375,93.75,375,1500,6000,12000,16000,20000]
-current_gain = -6
+cutoff = [20,200,2000,20000]
+gains = [-12,-12,-6,-6]
+current_gain = 0
 
 lpf = []
 for i in range( len( cutoff ) ):
     lpf.append( LPF(order, cutoff[i], current_gain, fs, sig_len ) )
-    current_gain = current_gain -6
+    #current_gain = current_gain - 6
+    current_gain = current_gain + gains[i]
 
 dirac = signal.unit_impulse(sig_len)
 
 p = signal.sosfilt( pink_filter(), dirac )
-p = norm( p ) * gain( -27)
+p = norm( p ) * gain(-70)
 
 x = []
 for i in range( len( cutoff ) ):
@@ -92,6 +94,9 @@ y = np.zeros(sig_len)
 for i in range( len( cutoff ) ):
     y = y + x[i]
 
+y = norm(y)
+print(np.max(y))
+
 ref  = [ 0, -10, -20, -30, -40]
 reff = [ 10, 100, 1000, 10000, 100000]
 
@@ -99,22 +104,22 @@ Y, Yf, Ydb = fft( y, fs, sig_len)
 P, Pf, Pdb = fft( p, fs, sig_len)
 PINK, PINKf, PINKdb = fft( wav_pink, wav_fs, len(wav_pink))
 
-plt.semilogx( PINKf, PINKdb )
+#plt.semilogx( PINKf, PINKdb )
 plt.semilogx( Yf, Ydb )
-plt.semilogx( Pf, Pdb )
+#plt.semilogx( Pf, Pdb )
 plt.semilogx( reff, ref )
 plt.legend(['Audacity', 'cascade approach','RBJ','reference'])
-plt.ylim( -150, 10 )
+plt.ylim( -50, 10 )
 plt.xlim( 1, int(fs / 2 ) )
 plt.grid(which='both')
 
-plt.figure(2)
-plt.semilogx( Yf, Ydb )
-for i in range( len( cutoff ) ):
-    plt.semilogx( lpf[i].FFTf, lpf[i].FFTdb )
-plt.ylim( -150, 10 )
-plt.xlim( 1, int(fs / 2 ) )
-plt.grid(which='both')
+#plt.figure(2)
+#plt.semilogx( Yf, Ydb )
+#for i in range( len( cutoff ) ):
+#    plt.semilogx( lpf[i].FFTf, lpf[i].FFTdb )
+#plt.ylim( -150, 10 )
+#plt.xlim( 1, int(fs / 2 ) )
+#plt.grid(which='both')
 
 plt.show()
 
