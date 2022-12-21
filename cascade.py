@@ -69,8 +69,8 @@ sig_len = 4096 * 16
 [wav_fs, wav_pink] = wavfile.read("pink.wav")
 wav_pink = norm(wav_pink) * gain ( -50 )
 
-cutoff = [20,200,2000,20000]
-gains = [-12,-12,-6,-6]
+cutoff = [18.4,185,2450,20000]
+gains = [-12,-12,-5.4,-8]
 current_gain = 0
 
 lpf = []
@@ -95,7 +95,6 @@ for i in range( len( cutoff ) ):
     y = y + x[i]
 
 y = norm(y)
-print(np.max(y))
 
 ref  = [ 0, -10, -20, -30, -40]
 reff = [ 10, 100, 1000, 10000, 100000]
