@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from scipy import signal
 from scipy.io import wavfile
 import random
+import dsp
 
 def fft(x,fs,fft_len):
     F = np.fft.fft(x,fft_len,norm='ortho')

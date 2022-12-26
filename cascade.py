@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
 from scipy.io import wavfile
+import dsp
 
 def pink_filter():
 	# Taken from http://www.firstpr.com.au/dsp/pink-noise/
@@ -33,41 +34,12 @@ def voss_algorithm( bands, n ):
 			if((i+1)%np.power(2,j)==0):
 				noise[j]=(r.random()*2)-1;
 
-def fft(x,fs,fft_len):
-    F = np.fft.fft(x,fft_len)
-    F = np.abs(F)
-    F = norm(F)
-    Ff = (fs/2)*np.linspace(0,1,int(fft_len/2))
-    Fdb = 20*np.log10(F[:int(len(F)/2)]);
-    
-    return F, Ff, Fdb
-
-def norm( n ):
-    return n/np.max(np.abs(n))
-
-def gain( g ):
-    return np.power(10, g / 20 )
-
-class LPF():
-    def __init__( self, order, cutoff, raw_gain, fs, sig_len ):
-        self.fs = fs
-        self.cutoff = cutoff
-        self.order = order
-        self.gain = raw_gain
-        self.sig_len = sig_len
-        self.filter = signal.butter( self.order, self.cutoff, 'lp', fs = self.fs, output = 'sos' )
-
-        dirac = signal.unit_impulse( self.sig_len )
-        self.ir = signal.sosfilt( self.filter, dirac ) * gain( raw_gain )
-
-        self.FFT, self.FFTf, self.FFTdb = fft( self.ir, self.fs, self.sig_len )
-
 fs = 48000
 order = 1
 sig_len = 4096 * 16
 
 [wav_fs, wav_pink] = wavfile.read("pink.wav")
-wav_pink = norm(wav_pink) * gain ( -50 )
+wav_pink = dsp.norm(wav_pink) * dsp.gain ( -50 )
 
 cutoff = [15,42,205,1300,10300]
 gains = [-6,-6,-6,-6,-6,-6]
@@ -75,18 +47,18 @@ current_gain = 0
 
 lpf = []
 for i in range( len( cutoff ) ):
-    lpf.append( LPF(order, cutoff[i], current_gain, fs, sig_len ) )
+    lpf.append( dsp.LPF(order, cutoff[i], current_gain, fs, sig_len ) )
     #current_gain = current_gain - 6
     current_gain = current_gain + gains[i]
 
 dirac = signal.unit_impulse(sig_len)
 
 p = signal.sosfilt( pink_filter(), dirac )
-p = norm( p ) * gain(-70)
+p = dsp.norm( p ) * dsp.gain(-70)
 
 x = []
 for i in range( len( cutoff ) ):
-    x.append( signal.sosfilt( lpf[i].filter, dirac ) * gain( lpf[i].gain ) )
+    x.append( signal.sosfilt( lpf[i].filter, dirac ) * dsp.gain( lpf[i].gain ) )
 
 
 y = np.zeros(sig_len)
@@ -94,14 +66,14 @@ y = np.zeros(sig_len)
 for i in range( len( cutoff ) ):
     y = y + x[i]
 
-y = norm(y)
+y = dsp.norm(y)
 
 ref  = [ 0, -10, -20, -30, -40]
 reff = [ 10, 100, 1000, 10000, 100000]
 
-Y, Yf, Ydb = fft( y, fs, sig_len)
-P, Pf, Pdb = fft( p, fs, sig_len)
-PINK, PINKf, PINKdb = fft( wav_pink, wav_fs, len(wav_pink))
+Y, Yf, Ydb = dsp.fft_norm( y, fs, sig_len)
+P, Pf, Pdb = dsp.fft_norm( p, fs, sig_len)
+PINK, PINKf, PINKdb = dsp.fft_norm( wav_pink, wav_fs, len(wav_pink))
 
 #plt.semilogx( PINKf, PINKdb )
 plt.semilogx( Yf, Ydb )
