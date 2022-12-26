@@ -19,20 +19,28 @@ def gain( g ):
     return np.power(10, g / 20 )
 
 
+def get_alpha( fc, fs ):
+    # Wikipedia
+    alpha = 1 / ( (1/(2*np.pi*(fc/fs))) + 1)
+    return alpha
 
 def ewma( alpha, length ):
     dirac = signal.unit_impulse( length )
     y = np.zeros( length )
     for i in range( length ):
-        y[i] = ( alpha*y[i-1] ) + ( dirac[i] * ( 1 - alpha ) )
+        #y[i] = ( alpha*y[i-1] ) + ( dirac[i] * ( 1 - alpha ) )
+        y[i] = y[i-1] + ( alpha * ( dirac[i] - y[i-1] ) )
+        #y[i] = ( alpha*dirac[i] ) + ( y[i-1] * ( 1 - alpha ) )
     return y
 
 fs = 48000
 order = 1
 sig_len = 4096 * 16
 
-fc = 10000
-cutoff = np.exp( -2 * np.pi * ( fc / fs ) )
+fc = 12000
+cutoff = 1 - np.exp( -2 * np.pi * ( fc / fs ) )
+#cutoff = get_alpha( fc, fs )
+
 print("Cutoff: " + str(fc) + "Hz")
 print("Alpha: " + str(cutoff) )
 
