@@ -51,8 +51,10 @@ white = white+white_noise.value
 
 # Voss-McCartney pink noise algorithm
 counter = 1
+indices = np.zeros(num_samples)
 for i in range(num_samples):
     index = trailing_bits(counter)
+    indices[i] = index
     #print("Counter:"+str(counter)+", Index:"+str(index))
     
     noise[index].Update()
@@ -72,9 +74,10 @@ x = norm(x)
 [wav_fs, wav_pink] = wavfile.read("pink.wav")
 wav_pink = norm(wav_pink)
 
-X, Xf, Xdb = fft(x, 48000, len(x) )
+X, Xf, Xdb = fft(x, fs, len(x) )
 PINK, PINKf, PINKdb = fft( wav_pink, wav_fs, len(wav_pink))
 
+plt.figure(1)
 plt.subplot(2,1,1)
 plt.plot(x)
 plt.subplot(2,1,2)
@@ -83,5 +86,7 @@ plt.semilogx( Xf, Xdb )
 #plt.ylim( -150, 10 )
 plt.xlim( 1, int(fs / 2 ) )
 plt.grid(which='both')
+plt.figure(2)
+plt.stem(indices)
 plt.show()
 
