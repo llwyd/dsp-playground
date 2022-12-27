@@ -30,50 +30,54 @@ def trailing_bits(num):
     bits = bin(num)
     return len(bits) - len(bits.rstrip('0'))
 
-fs = 48000
-num_samples = 4096
-x = np.zeros(num_samples)
 
-generators = 16
-rollover = 2**( generators - 1 )
-noise = []
-white = 0.0
+def voss(num_samples):
+    generators = 16
+    rollover = 2**( generators - 1 )
+    noise = []
+    x = np.zeros(num_samples)
+    white = 0.0
 
-white_noise = NoiseGenerator()
-white_noise.Update()
-
-for i in range(generators):
-    noise.append(NoiseGenerator())
-    noise[i].Update()
-    white = white+noise[i].value
-
-white = white+white_noise.value
-
-# Voss-McCartney pink noise algorithm
-counter = 1
-indices = np.zeros(num_samples)
-for i in range(num_samples):
-    index = trailing_bits(counter)
-    indices[i] = index
-    #print("Counter:"+str(counter)+", Index:"+str(index))
-    
-    noise[index].Update()
+    white_noise = NoiseGenerator()
     white_noise.Update()
 
-    white = white - white_noise.prev_value
-    white = white + white_noise.value
+    for i in range(generators):
+        noise.append(NoiseGenerator())
+        noise[i].Update()
+        white = white+noise[i].value
 
-    white = white - noise[index].prev_value;
-    white = white + noise[index].value;
-    x[i] = white
+    white = white+white_noise.value
 
-    counter = ( counter & (rollover - 1) )
-    counter = counter + 1
+    # Voss-McCartney pink noise algorithm
+    counter = 1
+    indices = np.zeros(num_samples)
+    for i in range(num_samples):
+        index = trailing_bits(counter)
+        indices[i] = index
+    
+        noise[index].Update()
+        white_noise.Update()
 
-x = norm(x)
+        white = white - white_noise.prev_value
+        white = white + white_noise.value
+
+        white = white - noise[index].prev_value;
+        white = white + noise[index].value;
+        x[i] = white
+
+        counter = ( counter & (rollover - 1) )
+        counter = counter + 1
+
+    x = norm(x)
+    return x, indices
+
+fs = 48000
+num_samples = 4096
+
 [wav_fs, wav_pink] = wavfile.read("pink.wav")
 wav_pink = norm(wav_pink)
 
+x, indices = voss(num_samples)
 X, Xf, Xdb = fft(x, fs, len(x) )
 PINK, PINKf, PINKdb = fft( wav_pink, wav_fs, len(wav_pink))
 
