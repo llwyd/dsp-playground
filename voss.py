@@ -72,25 +72,32 @@ def voss(num_samples):
     return x, indices
 
 fs = 48000
-num_samples = 4096
+num_samples = 4096 * 64
+num_tests = 1256
+#[wav_fs, wav_pink] = wavfile.read("pink.wav")
+#wav_pink = norm(wav_pink)
 
-[wav_fs, wav_pink] = wavfile.read("pink.wav")
-wav_pink = norm(wav_pink)
+Ydb = np.zeros(int(num_samples/2))
+Yf = []
+for i in range(num_tests):
+    x, indices = voss(num_samples)
+    X, Xf, Xdb = fft(x, fs, len(x) )
+    Ydb = np.add(Ydb,Xdb)
 
-x, indices = voss(num_samples)
-X, Xf, Xdb = fft(x, fs, len(x) )
-PINK, PINKf, PINKdb = fft( wav_pink, wav_fs, len(wav_pink))
+Zdb = Ydb / num_tests
+#PINK, PINKf, PINKdb = fft( wav_pink, wav_fs, len(wav_pink))
 
 plt.figure(1)
 plt.subplot(2,1,1)
 plt.plot(x)
 plt.subplot(2,1,2)
-plt.semilogx( PINKf, PINKdb )
+#plt.semilogx( PINKf, PINKdb )
 plt.semilogx( Xf, Xdb )
+plt.semilogx( Xf, Zdb )
 #plt.ylim( -150, 10 )
 plt.xlim( 1, int(fs / 2 ) )
 plt.grid(which='both')
-plt.figure(2)
-plt.stem(indices)
+#plt.figure(2)
+#plt.stem(indices)
 plt.show()
 
