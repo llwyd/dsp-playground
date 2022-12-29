@@ -2,9 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
 from scipy.io import wavfile
+from scipy import stats
 import random
 import dsp
 from tqdm import trange
+
+
 
 class NoiseGenerator():
     def Update(self):
@@ -18,6 +21,10 @@ class NoiseGenerator():
 def trailing_bits(num):
     bits = bin(num)
     return len(bits) - len(bits.rstrip('0'))
+
+def get_slope( x, y ):
+    slope, _, _, _, _ = stats.linregress( x, y )
+    return slope
 
 def voss(num_samples):
     generators = 16
@@ -68,7 +75,7 @@ def generate_decade_line():
 
 fs = 48000
 num_samples = 4096 * 4
-num_tests = 10
+num_tests = 5
 
 Ydb = np.zeros(int(num_samples/2))
 Yf = []
@@ -80,6 +87,12 @@ for i in trange(num_tests):
 Zdb = Ydb / num_tests
 
 ideal_db, ideal_f = generate_decade_line()
+
+ideal_slope = get_slope(ideal_f, ideal_db )
+Zdb_slope = get_slope( Xf, Zdb )
+
+print("Ideal Slope: " + str( ideal_slope ) )
+print("  Zdb Slope: " + str( Zdb_slope ) )
 
 plt.figure(1)
 plt.semilogx( Xf, Xdb )
