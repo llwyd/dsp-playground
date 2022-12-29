@@ -4,18 +4,7 @@ from scipy import signal
 from scipy.io import wavfile
 import random
 import dsp
-
-def fft(x,fs,fft_len):
-    F = np.fft.fft(x,fft_len,norm='ortho')
-    F = np.abs(F)
-    #F = norm(F)
-    Ff = (fs/2)*np.linspace(0,1,int(fft_len/2))
-    Fdb = 20*np.log10(F[:int(len(F)/2)]);
-    
-    return F, Ff, Fdb
-
-def norm( n ):
-    return n/np.max(np.abs(n))
+from tqdm import trange
 
 class NoiseGenerator():
     def Update(self):
@@ -29,7 +18,6 @@ class NoiseGenerator():
 def trailing_bits(num):
     bits = bin(num)
     return len(bits) - len(bits.rstrip('0'))
-
 
 def voss(num_samples):
     generators = 16
@@ -68,33 +56,36 @@ def voss(num_samples):
         counter = ( counter & (rollover - 1) )
         counter = counter + 1
 
-    x = norm(x)
+    x = dsp.norm(x)
     return x, indices
 
+def generate_decade_line():
+    mags = [20,10, 0,-10,-20,-30]
+    freqs = [1, 10, 100, 1000, 10000, 100000]
+
+    return mags, freqs
+
+
 fs = 48000
-num_samples = 4096 * 64
-num_tests = 1256
-#[wav_fs, wav_pink] = wavfile.read("pink.wav")
-#wav_pink = norm(wav_pink)
+num_samples = 4096 * 4
+num_tests = 10
 
 Ydb = np.zeros(int(num_samples/2))
 Yf = []
-for i in range(num_tests):
+for i in trange(num_tests):
     x, indices = voss(num_samples)
-    X, Xf, Xdb = fft(x, fs, len(x) )
+    X, Xf, Xdb = dsp.fft(x, fs, len(x) )
     Ydb = np.add(Ydb,Xdb)
 
 Zdb = Ydb / num_tests
-#PINK, PINKf, PINKdb = fft( wav_pink, wav_fs, len(wav_pink))
+
+ideal_db, ideal_f = generate_decade_line()
 
 plt.figure(1)
-plt.subplot(2,1,1)
-plt.plot(x)
-plt.subplot(2,1,2)
-#plt.semilogx( PINKf, PINKdb )
 plt.semilogx( Xf, Xdb )
 plt.semilogx( Xf, Zdb )
-#plt.ylim( -150, 10 )
+plt.semilogx( ideal_f, ideal_db )
+
 plt.xlim( 1, int(fs / 2 ) )
 plt.grid(which='both')
 #plt.figure(2)

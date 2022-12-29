@@ -18,7 +18,7 @@ class LPF():
         self.FFT, self.FFTf, self.FFTdb = fft( self.ir, self.fs, self.sig_len )
 
 def fft(x,fs,fft_len):
-    F = np.fft.fft(x,fft_len)
+    F = np.fft.fft(x,fft_len,norm='ortho')
     F = np.abs(F)
     Ff = (fs/2)*np.linspace(0,1,int(fft_len/2))
     Fdb = 20*np.log10(F[:int(len(F)/2)]);
