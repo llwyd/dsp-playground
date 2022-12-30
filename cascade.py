@@ -58,7 +58,7 @@ p = dsp.norm( p ) * dsp.gain(-70)
 
 x = []
 for i in range( len( cutoff ) ):
-    x.append( signal.sosfilt( lpf[i].filter, dirac ) * dsp.gain( lpf[i].gain ) )
+    x.append( lpf[i].ir )
 
 
 y = np.zeros(sig_len)
