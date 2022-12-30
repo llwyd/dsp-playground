@@ -26,9 +26,14 @@ class SinglePoleLPF():
         self.gain = raw_gain
         self.sig_len = sig_len
 
-        self.ir = ewma( self.alpha, self.sig_len) * gain( raw_gain )
-
+        self.ir = ewma( self.alpha, self.sig_len) * gain( self.gain )
         self.FFT, self.FFTf, self.FFTdb = fft( self.ir, self.fs, self.sig_len )
+
+    def update_gain( self, raw_gain ):
+        self.gain = raw_gain
+        self.ir = ewma( self.alpha, self.sig_len) * gain( self.gain )
+        self.FFT, self.FFTf, self.FFTdb = fft( self.ir, self.fs, self.sig_len )
+
 
 def fft(x,fs,fft_len,norm=None):
     F = np.fft.fft(x,fft_len,norm=norm)
