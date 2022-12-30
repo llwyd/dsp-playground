@@ -66,16 +66,25 @@ def voss(num_samples):
     x = dsp.norm(x)
     return x, indices
 
-def generate_decade_line():
-    mags = [20,10, 0,-10,-20,-30]
-    freqs = [1, 10, 100, 1000, 10000, 100000]
+def generate_decade_line(start_mag, end_freq):
+    iterations = int(np.log10( end_freq ) )
+    iterations += 1
+
+    mags = np.zeros(iterations)
+    freqs = np.zeros(iterations)
+
+    for i in range( iterations ):
+        mags[i] = start_mag
+        freqs[i] = ( 10 ** i )
+
+        start_mag -= 10
 
     return mags, freqs
 
 
 fs = 48000
 num_samples = 4096 * 4
-num_tests = 50
+num_tests = 1
 
 Ydb = np.zeros(int(num_samples/2))
 Yf = []
@@ -86,7 +95,7 @@ for i in trange(num_tests):
 
 Zdb = Ydb / num_tests
 
-ideal_db, ideal_f = generate_decade_line()
+ideal_db, ideal_f = generate_decade_line(20, 100000)
 
 ideal_slope = get_slope(ideal_f, ideal_db )
 Zdb_slope = get_slope( Xf, Zdb )
