@@ -14,12 +14,40 @@ def update_gain_0(val):
     new_y = update_filter(lpf)
     update_graph(new_y)
 
+def update_gain_1(val):
+    print(axband[1].val)
+    lpf[1].update_gain(axband[1].val)
+    B1_plot.set_ydata( lpf[1].FFTdb )
+    new_y = update_filter(lpf)
+    update_graph(new_y)
+
+def update_gain_2(val):
+    print(axband[2].val)
+    lpf[2].update_gain(axband[2].val)
+    B2_plot.set_ydata( lpf[2].FFTdb )
+    new_y = update_filter(lpf)
+    update_graph(new_y)
+
+def update_gain_3(val):
+    print(axband[3].val)
+    lpf[3].update_gain(axband[3].val)
+    B3_plot.set_ydata( lpf[3].FFTdb )
+    new_y = update_filter(lpf)
+    update_graph(new_y)
+
+def update_gain_4(val):
+    print(axband[4].val)
+    lpf[4].update_gain(axband[4].val)
+    B4_plot.set_ydata( lpf[4].FFTdb )
+    new_y = update_filter(lpf)
+    update_graph(new_y)
+
 def update_plot():
     pass
 
 def update_filter(lpf):
     y = np.zeros(sig_len)
-    total_gain = 0
+    total_gain = 1
     for i in range( len(lpf ) ):
         y = y + lpf[i].ir
         total_gain += lpf[i].gain
@@ -77,9 +105,9 @@ for i in range(len(bands)):
     slider_pos_x += slider_pos_x_inc
 
 axband[0].on_changed(update_gain_0)
-axband[1].on_changed(update_gain_0)
-axband[2].on_changed(update_gain_0)
-axband[3].on_changed(update_gain_0)
-axband[4].on_changed(update_gain_0)
+axband[1].on_changed(update_gain_1)
+axband[2].on_changed(update_gain_2)
+axband[3].on_changed(update_gain_3)
+axband[4].on_changed(update_gain_4)
 
 plt.show()
