@@ -52,3 +52,18 @@ def ewma( alpha, length ):
     for i in range( length ):
         y[i] = y[i-1] + ( alpha * ( dirac[i] - y[i-1] ) )
     return y
+
+def generate_decade_line(start_mag, end_freq):
+    iterations = int(np.log10( end_freq ) )
+    iterations += 1
+
+    mags = np.zeros(iterations)
+    freqs = np.zeros(iterations)
+
+    for i in range( iterations ):
+        mags[i] = start_mag
+        freqs[i] = ( 10 ** i )
+
+        start_mag -= 10
+
+    return mags, freqs
