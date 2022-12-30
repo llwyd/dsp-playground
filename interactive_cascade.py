@@ -10,10 +10,25 @@ import dsp
 def update_gain_0(val):
     print(axband[0].val)
     lpf[0].update_gain(axband[0].val)
-    Y_plot.set_ydata( lpf[0].FFTdb )
+    B0_plot.set_ydata( lpf[0].FFTdb )
+    new_y = update_filter(lpf)
+    update_graph(new_y)
 
 def update_plot():
     pass
+
+def update_filter(lpf):
+    y = np.zeros(sig_len)
+    total_gain = 0
+    for i in range( len(lpf ) ):
+        y = y + lpf[i].ir
+        total_gain += lpf[i].gain
+    y = y * dsp.gain( total_gain)
+    return y
+
+def update_graph(y):
+    _, Yf, Ydb = dsp.fft( y, fs, sig_len)
+    Y_plot.set_ydata( Ydb )
 
 def stringify( val ):
     return str(val) + " Hz "
@@ -34,7 +49,15 @@ ax.set_xlabel('Frequency (Hz)')
 ax.set_ylabel('Magnitude (dB)')
 axcolor = 'lightgoldenrodyellow'
 
-Y_plot, = ax.semilogx( lpf[0].FFTf, lpf[0].FFTdb )
+y = update_filter(lpf)
+Y, Yf, Ydb = dsp.fft( y, fs, sig_len)
+
+Y_plot, = ax.semilogx( Yf, Ydb )
+B0_plot, = ax.semilogx( lpf[0].FFTf, lpf[0].FFTdb )
+B1_plot, = ax.semilogx( lpf[1].FFTf, lpf[1].FFTdb )
+B2_plot, = ax.semilogx( lpf[2].FFTf, lpf[2].FFTdb )
+B3_plot, = ax.semilogx( lpf[3].FFTf, lpf[3].FFTdb )
+B4_plot, = ax.semilogx( lpf[4].FFTf, lpf[4].FFTdb )
 ideal, = ax.semilogx(ideal_f, ideal_db )
 
 
