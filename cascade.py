@@ -41,13 +41,13 @@ sig_len = 4096 * 16
 [wav_fs, wav_pink] = wavfile.read("pink.wav")
 wav_pink = dsp.norm(wav_pink) * dsp.gain ( -50 )
 
-cutoff = [15,42,205,1300,10300]
+cutoff = [1,10,100,1000,10000]
 gains = [-6,-6,-6,-6,-6,-6]
-current_gain = 0
+current_gain = 6
 
 lpf = []
 for i in range( len( cutoff ) ):
-    lpf.append( dsp.LPF(order, cutoff[i], current_gain, fs, sig_len ) )
+    lpf.append( dsp.SinglePoleLPF(order, cutoff[i], current_gain, fs, sig_len ) )
     #current_gain = current_gain - 6
     current_gain = current_gain + gains[i]
 
@@ -68,8 +68,7 @@ for i in range( len( cutoff ) ):
 
 y = dsp.norm(y)
 
-ref  = [ 0, -10, -20, -30, -40]
-reff = [ 10, 100, 1000, 10000, 100000]
+ideal_db, ideal_f = dsp.generate_decade_line(0, 100000)
 
 Y, Yf, Ydb = dsp.fft_norm( y, fs, sig_len)
 P, Pf, Pdb = dsp.fft_norm( p, fs, sig_len)
@@ -78,7 +77,7 @@ PINK, PINKf, PINKdb = dsp.fft_norm( wav_pink, wav_fs, len(wav_pink))
 #plt.semilogx( PINKf, PINKdb )
 plt.semilogx( Yf, Ydb )
 #plt.semilogx( Pf, Pdb )
-plt.semilogx( reff, ref )
+plt.semilogx( ideal_f, ideal_db )
 plt.legend(['Audacity', 'cascade approach','RBJ','reference'])
 plt.ylim( -50, 10 )
 plt.xlim( 1, int(fs / 2 ) )
