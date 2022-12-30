@@ -75,13 +75,13 @@ def generate_decade_line():
 
 fs = 48000
 num_samples = 4096 * 4
-num_tests = 5
+num_tests = 50
 
 Ydb = np.zeros(int(num_samples/2))
 Yf = []
 for i in trange(num_tests):
     x, indices = voss(num_samples)
-    X, Xf, Xdb = dsp.fft(x, fs, len(x) )
+    X, Xf, Xdb = dsp.fft(x, fs, len(x),norm='ortho' )
     Ydb = np.add(Ydb,Xdb)
 
 Zdb = Ydb / num_tests
