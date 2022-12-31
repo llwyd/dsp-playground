@@ -78,6 +78,8 @@ fig, ax = plt.subplots()
 fig.subplots_adjust(bottom=0.35)
 ax.set_xlabel('Frequency (Hz)')
 ax.set_ylabel('Magnitude (dB)')
+ax.set_xlim([1,fs/2])
+ax.set_ylim([-50,30])
 axcolor = 'lightgoldenrodyellow'
 
 y = update_filter(lpf)
