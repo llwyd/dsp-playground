@@ -6,17 +6,7 @@ from scipy import stats
 import random
 import dsp
 from tqdm import trange
-
-
-
-class NoiseGenerator():
-    def Update(self):
-        self.prev_value = self.value
-        self.value = (random.random() * 2) - 1
-
-    def __init__(self):
-        self.value = 0
-        self.prev_value = 0
+import noise
 
 def trailing_bits(num):
     bits = bin(num)
@@ -29,17 +19,17 @@ def get_slope( x, y ):
 def voss(num_samples):
     generators = 16
     rollover = 2**( generators - 1 )
-    noise = []
+    noise_array = []
     x = np.zeros(num_samples)
     white = 0.0
 
-    white_noise = NoiseGenerator()
+    white_noise = noise.NoiseGenerator()
     white_noise.Update()
 
     for i in range(generators):
-        noise.append(NoiseGenerator())
-        noise[i].Update()
-        white = white+noise[i].value
+        noise_array.append(noise.NoiseGenerator())
+        noise_array[i].Update()
+        white = white+noise_array[i].value
 
     white = white+white_noise.value
 
@@ -50,14 +40,14 @@ def voss(num_samples):
         index = trailing_bits(counter)
         indices[i] = index
     
-        noise[index].Update()
+        noise_array[index].Update()
         white_noise.Update()
 
         white = white - white_noise.prev_value
         white = white + white_noise.value
 
-        white = white - noise[index].prev_value;
-        white = white + noise[index].value;
+        white = white - noise_array[index].prev_value;
+        white = white + noise_array[index].value;
         x[i] = white
 
         counter = ( counter & (rollover - 1) )
@@ -68,7 +58,7 @@ def voss(num_samples):
 
 fs = 48000
 num_samples = 4096 * 4
-num_tests = 1
+num_tests = 4
 
 Ydb = np.zeros(int(num_samples/2))
 Yf = []
