@@ -16,8 +16,7 @@ def get_slope( x, y ):
     slope, _, _, _, _ = stats.linregress( x, y )
     return slope
 
-def voss(num_samples):
-    generators = 16
+def voss(num_samples,generators):
     rollover = 2**( generators - 1 )
     noise_array = []
     x = np.zeros(num_samples)
@@ -59,23 +58,25 @@ def voss(num_samples):
 fs = 48000
 num_samples = 4096 * 4
 num_tests = 4
+generators = 16
+
+print(f'Voss-McCartney Pink Noise Generator')
+print(f'    Sample Rate: {fs}') 
+print(f'         Length: {num_samples} Samples ({num_samples*(1/fs):.2f}s)') 
+print(f'  Noise sources: {generators}')
+print(f'Test iterations: {num_tests}')
+print(f'Generating...')
 
 Ydb = np.zeros(int(num_samples/2))
 Yf = []
 for i in trange(num_tests):
-    x, indices = voss(num_samples)
+    x, indices = voss(num_samples,generators)
     X, Xf, Xdb = dsp.fft(x, fs, len(x),norm='ortho' )
     Ydb = np.add(Ydb,Xdb)
 
 Zdb = Ydb / num_tests
 
 ideal_db, ideal_f = dsp.generate_decade_line(20, 100000)
-
-ideal_slope = get_slope(ideal_f, ideal_db )
-Zdb_slope = get_slope( Xf, Zdb )
-
-print("Ideal Slope: " + str( ideal_slope ) )
-print("  Zdb Slope: " + str( Zdb_slope ) )
 
 plt.figure(1)
 plt.semilogx( Xf, Xdb )
