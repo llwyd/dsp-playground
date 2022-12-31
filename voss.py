@@ -88,7 +88,9 @@ def voss32(num_samples,generators):
 
         pink = pink - np.uint64(noise_array[index].prev_value);
         pink = pink + np.uint64(noise_array[index].value);
-        x[i] = np.uint32(pink >> shift)
+        pink_shifted = pink >> np.uint64(shift)
+
+        x[i] = np.uint32(pink_shifted)
 
         counter = ( counter & (rollover - 1) )
         counter = counter + 1
@@ -114,26 +116,26 @@ Ydb_32 = np.zeros(int(num_samples/2))
 Yf = []
 
 for i in trange(num_tests):
-    x, indices = voss(num_samples,generators)
+#    x, indices = voss(num_samples,generators)
     x_32, _ = voss32(num_samples,generators)
     x_32 = dsp.norm(x_32)
-    X, Xf, Xdb = dsp.fft(x, fs, len(x),norm='ortho' )
+#    X, Xf, Xdb = dsp.fft(x, fs, len(x),norm='ortho' )
     X_32, Xf_32, Xdb_32 = dsp.fft(x_32, fs, len(x_32),norm='ortho')
-    Ydb = np.add(Ydb,Xdb)
+#    Ydb = np.add(Ydb,Xdb)
     Ydb_32 = np.add( Ydb_32, Xdb_32 )
 
-Zdb = Ydb / num_tests
+#Zdb = Ydb / num_tests
 Zdb_32 = Ydb_32 / num_tests
 
 ideal_db, ideal_f = dsp.generate_decade_line(20, 100000)
 
-plt.figure(1)
-plt.semilogx( Xf, Xdb )
-plt.semilogx( Xf, Zdb )
-plt.semilogx( ideal_f, ideal_db )
+#plt.figure(1)
+#plt.semilogx( Xf, Xdb )
+#plt.semilogx( Xf, Zdb )
+#plt.semilogx( ideal_f, ideal_db )
 
-plt.xlim( 1, int(fs / 2 ) )
-plt.grid(which='both')
+#plt.xlim( 1, int(fs / 2 ) )
+#plt.grid(which='both')
 
 plt.figure(2)
 plt.semilogx( Xf_32, Xdb_32 )
