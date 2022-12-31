@@ -56,8 +56,8 @@ def voss(num_samples,generators):
     return x, indices
 
 def voss32(num_samples,generators):
-    assert ( generators & (generators - 1) ) == 0
-    shift = np.uint32(np.log2(generators))
+    assert ( (generators+1) & ((generators+1) - 1) ) == 0
+    shift = np.uint32(np.log2(generators+1))
     rollover = 2**( generators - 1 )
     noise_array = []
     
@@ -100,7 +100,7 @@ def voss32(num_samples,generators):
 fs = 48000
 num_samples = 4096 * 4
 num_tests = 32
-generators = 16
+generators = 15
 
 print(f'Voss-McCartney Pink Noise Generator')
 print(f'    Sample Rate: {fs}') 
