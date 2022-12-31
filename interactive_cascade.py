@@ -45,16 +45,9 @@ def update_filter(lpf):
     total_gain = 0
     for i in range( len(lpf ) ):
         y = y + lpf[i].ir
-        print("\t"+ str(np.max(np.abs(lpf[i].ir))))
         total_gain += dsp.gain( lpf[i].gain )
-    print("Total gain: " + str(total_gain) )
-
     raw_gain = -20*np.log10(total_gain)
-    print("Raw: " + str(raw_gain))
-
-    y = y * dsp.gain(total_gain)
-    max_val = np.max(np.abs(y))
-    print("Max Val: " +str(max_val))
+    y = y * dsp.gain(raw_gain)
     return y
 
 def update_graph(y):
@@ -68,7 +61,7 @@ fs = 48000
 sig_len = 8192 * 8
 
 bands = [1, 10, 100, 1000, 10000]
-ideal_db, ideal_f = dsp.generate_decade_line( 20, 100000 )
+ideal_db, ideal_f = dsp.generate_decade_line( 0, 100000 )
 lpf = []
 for cutoff in bands:
     lpf.append( dsp.SinglePoleLPF( 1, cutoff, 0, fs, sig_len ) )
@@ -79,7 +72,7 @@ fig.subplots_adjust(bottom=0.35)
 ax.set_xlabel('Frequency (Hz)')
 ax.set_ylabel('Magnitude (dB)')
 ax.set_xlim([1,fs/2])
-ax.set_ylim([-50,30])
+ax.set_ylim([-50,5])
 axcolor = 'lightgoldenrodyellow'
 
 y = update_filter(lpf)
