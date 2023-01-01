@@ -102,8 +102,8 @@ def voss32(num_samples,generators):
 
 
 fs = 48000
-num_samples = 4096
-num_tests = 16
+num_samples = 4096 * 4
+num_tests = 2
 generators = 15
 
 print(f'Voss-McCartney Pink Noise Generator')
@@ -129,7 +129,13 @@ for i in trange(num_tests):
 #Zdb = Ydb / num_tests
 Zdb_32 = Ydb_32 / num_tests
 
-ideal_db, ideal_f = dsp.generate_decade_line(20, 100000)
+ideal_db, ideal_f = dsp.generate_decade_line(10, 100000)
+
+X_slope, _, _, _, _ = stats.linregress( np.log10( Xf_32, where=Xf_32 > 0 ), np.log10( dsp.gain( Xdb_32 ) ) )
+ideal_slope, _, _, _, _ = stats.linregress( np.log10(ideal_f), np.log10( dsp.gain(ideal_db) ) )
+
+print(f' Pink Slope: {X_slope:.2f}')
+print(f'Ideal Slope: {ideal_slope:.2f}')
 
 #plt.figure(1)
 #plt.semilogx( Xf, Xdb )
