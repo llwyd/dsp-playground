@@ -58,6 +58,9 @@ def norm( n ):
 def gain( g ):
     return np.power(10, g / 20 )
 
+def db_gain( g ):
+    return -20*np.log10(g)
+
 def get_alpha( fc, fs ):
     # Wikipedia
     #alpha = 1 / ( (1/(2*np.pi*(fc/fs))) + 1)
