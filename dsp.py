@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
 from scipy.io import wavfile
+from scipy import stats
 
 class LPF():
     def __init__( self, order, cutoff, raw_gain, fs, sig_len ):
@@ -88,3 +89,8 @@ def generate_decade_line(start_mag, end_freq):
         start_mag -= 10
 
     return mags, freqs
+
+def get_fslope( Xf, Xdb ):
+    slope, _, _, _, _ = stats.linregress( np.log10( Xf, where=Xf > 0 ), np.log10( gain( Xdb ) ) )
+    return slope
+

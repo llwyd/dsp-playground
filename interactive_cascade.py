@@ -54,6 +54,12 @@ def update_graph(y):
     _, Yf, Ydb = dsp.fft( y, fs, sig_len)
     Y_plot.set_ydata( Ydb )
 
+    cascade_slope = dsp.get_fslope( Yf, Ydb )
+    ideal_slope = dsp.get_fslope( ideal_f, ideal_db )
+
+    cascade_slope_text.set_text(f'Filter gradient: {cascade_slope:.3f}')
+    ideal_slope_text.set_text(f' Ideal gradient: {ideal_slope:.3f}')
+
 def stringify( val ):
     return str(val) + " Hz "
 
@@ -73,6 +79,7 @@ ax.set_xlabel('Frequency (Hz)')
 ax.set_ylabel('Magnitude (dB)')
 ax.set_xlim([1,fs/2])
 ax.set_ylim([-50,5])
+
 axcolor = 'lightgoldenrodyellow'
 
 y = update_filter(lpf)
@@ -86,6 +93,12 @@ B3_plot, = ax.semilogx( lpf[3].FFTf, lpf[3].FFTdb )
 B4_plot, = ax.semilogx( lpf[4].FFTf, lpf[4].FFTdb )
 ideal, = ax.semilogx(ideal_f, ideal_db )
 
+
+cascade_slope = dsp.get_fslope( Yf, Ydb )
+ideal_slope = dsp.get_fslope( ideal_f, ideal_db )
+
+cascade_slope_text =ax.text(1000,0,f'Filter gradient: {cascade_slope:.3f}')
+ideal_slope_text =ax.text(1000,4,f' Ideal gradient: {ideal_slope:.3f}')
 
 axcolor = 'lightgoldenrodyellow'
 axfreq = []
