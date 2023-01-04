@@ -5,41 +5,6 @@ from scipy import signal
 from scipy.io import wavfile
 import dsp
 
-
-
-def update_gain_0(val):
-    lpf[0].update_gain(axband[0].val)
-    B0_plot.set_ydata( lpf[0].FFTdb )
-    new_y = update_filter(lpf)
-    update_graph(new_y)
-
-def update_gain_1(val):
-    lpf[1].update_gain(axband[1].val)
-    B1_plot.set_ydata( lpf[1].FFTdb )
-    new_y = update_filter(lpf)
-    update_graph(new_y)
-
-def update_gain_2(val):
-    lpf[2].update_gain(axband[2].val)
-    B2_plot.set_ydata( lpf[2].FFTdb )
-    new_y = update_filter(lpf)
-    update_graph(new_y)
-
-def update_gain_3(val):
-    lpf[3].update_gain(axband[3].val)
-    B3_plot.set_ydata( lpf[3].FFTdb )
-    new_y = update_filter(lpf)
-    update_graph(new_y)
-
-def update_gain_4(val):
-    lpf[4].update_gain(axband[4].val)
-    B4_plot.set_ydata( lpf[4].FFTdb )
-    new_y = update_filter(lpf)
-    update_graph(new_y)
-
-def update_plot():
-    pass
-
 def update_filter(freq):
     y = np.zeros(sig_len)
     total_gain = 0
