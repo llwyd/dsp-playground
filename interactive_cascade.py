@@ -40,12 +40,12 @@ def update_gain_4(val):
 def update_plot():
     pass
 
-def update_filter(lpf):
+def update_filter(freq):
     y = np.zeros(sig_len)
     total_gain = 0
-    for i in range( len(lpf ) ):
-        y = y + lpf[i].ir
-        total_gain += dsp.gain( lpf[i].gain )
+    for i in range( len(freq) ):
+        y = y + freq[i].lpf.ir
+        total_gain += dsp.gain( freq[i].lpf.gain )
     raw_gain = -20*np.log10(total_gain)
     y = y * dsp.gain(raw_gain)
     return y
@@ -63,16 +63,34 @@ def update_graph(y):
 def stringify( val ):
     return str(val) + " Hz "
 
+class SliderControl:
+    def __init__( self, height, width, pos_x, pos_y ):
+        self.height = height
+        self.width = width
+        self.x = pos_x
+        self.y = pos_y
+
+class FilterControl:
+    def gain_changed( self, val ):
+        self.lpf.update_gain(self.slider.val)
+        self.plot.set_ydata( self.lpf.FFTdb )
+        new_y = update_filter(freqband)
+        update_graph(new_y)
+        pass
+    def freq_changed( self ):
+        pass
+    def __init__( self, fig, ax, filter_order, fc, fs, gain, samples, slider_config, axcolor ):
+        self.lpf = dsp.SinglePoleLPF( filter_order, fc, gain, fs, samples )
+        self.plot,  = ax.semilogx( self.lpf.FFTf, self.lpf.FFTdb )
+        self.slider_ax = fig.add_axes([slider_config.x, slider_config.y, slider_config.width, slider_config.height], facecolor=axcolor)
+        self.slider = Slider(self.slider_ax,stringify(fc), -50, 20, valinit=0,valstep=1,orientation = "vertical" )
+        self.slider.on_changed(self.gain_changed)
+        pass
+
 fs = 48000
 sig_len = 8192 * 8
 
-bands = [1, 10, 100, 1000, 10000]
-ideal_db, ideal_f = dsp.generate_decade_line( 0, 100000 )
-lpf = []
-for cutoff in bands:
-    lpf.append( dsp.SinglePoleLPF( 1, cutoff, 0, fs, sig_len ) )
-
-
+axcolor = 'lightgoldenrodyellow'
 fig, ax = plt.subplots()
 fig.subplots_adjust(bottom=0.35)
 ax.set_xlabel('Frequency (Hz)')
@@ -80,19 +98,21 @@ ax.set_ylabel('Magnitude (dB)')
 ax.set_xlim([1,fs/2])
 ax.set_ylim([-50,5])
 
-axcolor = 'lightgoldenrodyellow'
+bands = [1, 10, 100, 1000, 10000]
+ideal_db, ideal_f = dsp.generate_decade_line( 0, 100000 )
+freqband = []
 
-y = update_filter(lpf)
+config = SliderControl(0.2, 0.03, 0.2, 0.035)
+slider_pos_x_inc = 0.035
+for cutoff in bands:
+    freqband.append( FilterControl(fig, ax, 1, cutoff, fs, 0, sig_len, config, axcolor) )
+    config.x += slider_pos_x_inc
+
+y = update_filter(freqband)
 Y, Yf, Ydb = dsp.fft( y, fs, sig_len)
 
 Y_plot, = ax.semilogx( Yf, Ydb )
-B0_plot, = ax.semilogx( lpf[0].FFTf, lpf[0].FFTdb )
-B1_plot, = ax.semilogx( lpf[1].FFTf, lpf[1].FFTdb )
-B2_plot, = ax.semilogx( lpf[2].FFTf, lpf[2].FFTdb )
-B3_plot, = ax.semilogx( lpf[3].FFTf, lpf[3].FFTdb )
-B4_plot, = ax.semilogx( lpf[4].FFTf, lpf[4].FFTdb )
 ideal, = ax.semilogx(ideal_f, ideal_db )
-
 
 cascade_slope = dsp.get_fslope( Yf, Ydb )
 ideal_slope = dsp.get_fslope( ideal_f, ideal_db )
@@ -101,24 +121,5 @@ cascade_slope_text =ax.text(1000,0,f'Filter gradient: {cascade_slope:.3f}')
 ideal_slope_text =ax.text(1000,4,f' Ideal gradient: {ideal_slope:.3f}')
 
 axcolor = 'lightgoldenrodyellow'
-axfreq = []
-axband = []
-
-slider_height = 0.2
-slider_width = 0.03
-slider_pos_x = 0.2
-slider_pos_y = 0.035
-slider_pos_x_inc = 0.035
-
-for i in range(len(bands)):
-    axfreq.append(fig.add_axes([slider_pos_x, slider_pos_y, slider_width, slider_height], facecolor=axcolor))
-    axband.append( Slider(axfreq[i],stringify(bands[i]), -50, 20, valinit=0,valstep=1,orientation = "vertical" ) )
-    slider_pos_x += slider_pos_x_inc
-
-axband[0].on_changed(update_gain_0)
-axband[1].on_changed(update_gain_1)
-axband[2].on_changed(update_gain_2)
-axband[3].on_changed(update_gain_3)
-axband[4].on_changed(update_gain_4)
 
 plt.show()
