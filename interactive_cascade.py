@@ -42,7 +42,7 @@ class FilterControl:
         new_y = update_filter(freqband)
         update_graph(new_y)
     def freq_changed( self, val ):
-        self.lpf.update_freq(self.fslider.val)
+        self.lpf.update_freq(np.power(10,self.fslider.val))
         self.plot.set_ydata( self.lpf.FFTdb )
         new_y = update_filter(freqband)
         update_graph(new_y)
@@ -52,9 +52,9 @@ class FilterControl:
         self.slider_ax = fig.add_axes([slider_config.x, slider_config.y, slider_config.width, slider_config.height], facecolor=axcolor)
         self.slider = Slider(self.slider_ax,stringify(fc), -50, 20, valinit=0,valstep=1,orientation = "vertical" )
         self.slider.on_changed(self.gain_changed)
-        
+
         self.fslider_ax = fig.add_axes([fslider_config.x, fslider_config.y, fslider_config.width, fslider_config.height], facecolor=axcolor)
-        self.fslider = Slider(self.fslider_ax,stringify(fc), 1, int(fs/2), valinit=fc,valstep=1,orientation = "horizontal" )
+        self.fslider = Slider(self.fslider_ax,stringify(fc), np.log10(1), np.log10(fs/2), valinit=np.log10(fc),valstep=0.001,orientation = "horizontal" )
         self.fslider.on_changed(self.freq_changed)
 
 fs = 48000
