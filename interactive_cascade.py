@@ -67,8 +67,9 @@ ax.set_xlabel('Frequency (Hz)')
 ax.set_ylabel('Magnitude (dB)')
 ax.set_xlim([1,fs/2])
 ax.set_ylim([-50,5])
+ax.grid(which='both')
 
-bands = [1, 10, 100, 1000, 10000]
+bands = [1, 10, 100, 1000, 10000,16000]
 ideal_db, ideal_f = dsp.generate_decade_line( 0, 100000 )
 freqband = []
 
