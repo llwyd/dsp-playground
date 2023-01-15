@@ -7,6 +7,13 @@ import random
 import dsp
 from tqdm import trange
 import noise
+from enum import Enum
+
+
+class Mode(Enum):
+    Float = "Float"
+    FloatStoch = "Float-Stochastic"
+    Fixed = "Fixed Point"
 
 def trailing_bits(num):
     bits = bin(num)
@@ -17,12 +24,14 @@ def get_slope( x, y ):
     return slope
 
 def voss(num_samples,generators):
-    rollover = 2**( generators )
-    assert trailing_bits(rollover) == generators
+    assert ( (generators+1) & ((generators+1) - 1) ) == 0
+    shift = np.uint32(np.log2(generators+1))
+    rollover = 2**( generators-1 )
+    assert trailing_bits(rollover) == (generators-1)
     noise_array = []
+    
     x = np.zeros(num_samples)
     white = 0.0
-
     white_noise = noise.NoiseGenerator()
     white_noise.Update()
 
@@ -50,10 +59,11 @@ def voss(num_samples,generators):
         white = white + noise_array[index].value;
         x[i] = white
 
+        x[i] = x[i] / (generators+1)
+
         counter = ( counter & (rollover - 1) )
         counter = counter + 1
 
-    x = dsp.norm(x)
     return x, indices
 
 def voss32(num_samples,generators):
@@ -103,14 +113,16 @@ def voss32(num_samples,generators):
 
 fs = 48000
 num_samples = 4096 * 4
-num_tests = 2
+num_tests = 200
 generators = 15
+mode = Mode.Fixed
 
 print(f'Voss-McCartney Pink Noise Generator')
 print(f'    Sample Rate: {fs}') 
 print(f'         Length: {num_samples} Samples ({num_samples*(1/fs):.2f}s)') 
 print(f'  Noise sources: {generators}')
 print(f'Test iterations: {num_tests}')
+print(f'Generation mode: {mode.value}')
 print(f'Generating...')
 
 Ydb = np.zeros(int(num_samples/2))
@@ -118,20 +130,23 @@ Ydb_32 = np.zeros(int(num_samples/2))
 Yf = []
 
 for i in trange(num_tests):
-#    x, indices = voss(num_samples,generators)
-    x_32, _ = voss32(num_samples,generators)
-    x_32 = dsp.norm(x_32)
-#    X, Xf, Xdb = dsp.fft(x, fs, len(x),norm='ortho' )
-    X_32, Xf_32, Xdb_32 = dsp.fft(x_32, fs, len(x_32),norm='ortho')
-#    Ydb = np.add(Ydb,Xdb)
-    Ydb_32 = np.add( Ydb_32, Xdb_32 )
+    if mode == Mode.Fixed:
+        x, indices = voss32(num_samples,generators)
+        x = dsp.norm(x)
+    elif mode == Mode.Float:
+        x, indices = voss(num_samples,generators)
+        x = dsp.norm(x)
+    else:
+        assert False
 
-#Zdb = Ydb / num_tests
-Zdb_32 = Ydb_32 / num_tests
+    X, Xf, Xdb = dsp.fft(x, fs, len(x),norm='ortho' )
+    Ydb = np.add(Ydb,Xdb)
+
+Zdb = Ydb / num_tests
 
 ideal_db, ideal_f = dsp.generate_decade_line(10, 100000)
 
-X_slope, _, _, _, _ = stats.linregress( np.log10( Xf_32, where=Xf_32 > 0 ), np.log10( dsp.gain( Xdb_32 ) ) )
+X_slope, _, _, _, _ = stats.linregress( np.log10( Xf, where=Xf > 0 ), np.log10( dsp.gain( Xdb ) ) )
 ideal_slope, _, _, _, _ = stats.linregress( np.log10(ideal_f), np.log10( dsp.gain(ideal_db) ) )
 
 print(f' Pink Slope: {X_slope:.2f}')
@@ -146,8 +161,8 @@ print(f'Ideal Slope: {ideal_slope:.2f}')
 #plt.grid(which='both')
 
 plt.figure(2)
-plt.semilogx( Xf_32, Xdb_32 )
-plt.semilogx( Xf_32, Zdb_32 )
+plt.semilogx( Xf, Xdb )
+plt.semilogx( Xf, Zdb )
 plt.semilogx( ideal_f, ideal_db )
 plt.xlim( 1, int(fs / 2 ) )
 plt.grid(which='both')
