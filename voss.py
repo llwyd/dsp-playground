@@ -114,8 +114,6 @@ def voss_stoch(num_samples,generators):
         for j in range(len(noise_array)):
             if r < noise_array[j].p:
                 index = j
-                noise_array[j].Update()
-                noise_array[previous_index].Reset()
                 previous_index = j
                 break
 
