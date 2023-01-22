@@ -92,6 +92,9 @@ def voss_stoch(num_samples,generators):
     p = generate_p(generators)
     previous_index = generators - 1
 
+    k = np.linspace(0,num_samples - 1, num_samples,dtype=np.uint32)
+    #np.random.shuffle(k)
+
     x = np.zeros(num_samples)
     white = 0.0
     white_noise = noise.NoiseGenerator()
@@ -117,7 +120,7 @@ def voss_stoch(num_samples,generators):
                 previous_index = j
                 break
 
-        #index = trailing_bits( int(r*(rollover)) )
+        index = trailing_bits( k[i] )
         indices[i] = index
     
         noise_array[index].noise.Update()
