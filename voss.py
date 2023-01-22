@@ -16,10 +16,16 @@ class Mode(Enum):
     Fixed = "Fixed Point"
 
 class Stochastic():
-    def __init__(p):
+    def __init__(self,p):
         self.default_p = p
         self.p = p
         self.noise = noise.NoiseGenerator()
+    def Update(self):
+        self.p = self.p / 2
+    def Reset(self):
+        self.p = self.p * 2
+        if( self.p > self.default_p):
+            self.p = self.default_p
 
 def trailing_bits(num):
     bits = bin(num)
@@ -83,7 +89,8 @@ def voss_stoch(num_samples,generators):
     assert trailing_bits(rollover) == (generators-1)
     noise_array = []
    
-    p = generate_p(generators - 1)
+    p = generate_p(generators)
+    previous_index = generators - 1
 
     x = np.zeros(num_samples)
     white = 0.0
@@ -91,9 +98,9 @@ def voss_stoch(num_samples,generators):
     white_noise.Update()
 
     for i in range(generators):
-        noise_array.append(noise.NoiseGenerator())
-        noise_array[i].Update()
-        white = white+noise_array[i].value
+        noise_array.append(Stochastic(p[i]))
+        noise_array[i].noise.Update()
+        white = white+noise_array[i].noise.value
 
     white = white+white_noise.value
 
@@ -104,21 +111,24 @@ def voss_stoch(num_samples,generators):
         index = generators - 1
 
         r = random.random()
-        for j in range(len(p)):
-            if r < p[j]:
+        for j in range(len(noise_array)):
+            if r < noise_array[j].p:
                 index = j
+                noise_array[j].Update()
+                noise_array[previous_index].Reset()
+                previous_index = j
                 break
 
         indices[i] = index
     
-        noise_array[index].Update()
+        noise_array[index].noise.Update()
         white_noise.Update()
 
         white = white - white_noise.prev_value
         white = white + white_noise.value
 
-        white = white - noise_array[index].prev_value;
-        white = white + noise_array[index].value;
+        white = white - noise_array[index].noise.prev_value;
+        white = white + noise_array[index].noise.value;
         x[i] = white
 
         x[i] = x[i] / (generators+1)
@@ -175,9 +185,9 @@ def voss32(num_samples,generators):
 
 fs = 48000
 num_samples = 4096 * 4
-num_tests = 200
+num_tests = 250
 generators = 15
-mode = Mode.FloatStoch
+mode = Mode.Float
 
 print(f'Voss-McCartney Pink Noise Generator')
 print(f'    Sample Rate: {fs}') 
