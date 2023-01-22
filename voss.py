@@ -15,6 +15,12 @@ class Mode(Enum):
     FloatStoch = "Float-Stochastic"
     Fixed = "Fixed Point"
 
+class Stochastic():
+    def __init__(p):
+        self.default_p = p
+        self.p = p
+        self.noise = noise.NoiseGenerator()
+
 def trailing_bits(num):
     bits = bin(num)
     return len(bits) - len(bits.rstrip('0'))
@@ -47,6 +53,62 @@ def voss(num_samples,generators):
     indices = np.zeros(num_samples)
     for i in range(num_samples):
         index = trailing_bits(counter)
+        indices[i] = index
+    
+        noise_array[index].Update()
+        white_noise.Update()
+
+        white = white - white_noise.prev_value
+        white = white + white_noise.value
+
+        white = white - noise_array[index].prev_value;
+        white = white + noise_array[index].value;
+        x[i] = white
+
+        x[i] = x[i] / (generators+1)
+
+        counter = ( counter & (rollover - 1) )
+        counter = counter + 1
+
+    return x, indices
+
+def generate_p(generators):
+    x = np.linspace(1,generators,generators)
+    return 1 - np.power( 0.5, x )
+
+def voss_stoch(num_samples,generators):
+    assert ( (generators+1) & ((generators+1) - 1) ) == 0
+    shift = np.uint32(np.log2(generators+1))
+    rollover = 2**( generators-1 )
+    assert trailing_bits(rollover) == (generators-1)
+    noise_array = []
+   
+    p = generate_p(generators - 1)
+
+    x = np.zeros(num_samples)
+    white = 0.0
+    white_noise = noise.NoiseGenerator()
+    white_noise.Update()
+
+    for i in range(generators):
+        noise_array.append(noise.NoiseGenerator())
+        noise_array[i].Update()
+        white = white+noise_array[i].value
+
+    white = white+white_noise.value
+
+    # Voss-McCartney pink noise algorithm
+    counter = 1
+    indices = np.zeros(num_samples)
+    for i in range(num_samples):
+        index = generators - 1
+
+        r = random.random()
+        for j in range(len(p)):
+            if r < p[j]:
+                index = j
+                break
+
         indices[i] = index
     
         noise_array[index].Update()
@@ -115,7 +177,7 @@ fs = 48000
 num_samples = 4096 * 4
 num_tests = 200
 generators = 15
-mode = Mode.Fixed
+mode = Mode.FloatStoch
 
 print(f'Voss-McCartney Pink Noise Generator')
 print(f'    Sample Rate: {fs}') 
@@ -135,6 +197,9 @@ for i in trange(num_tests):
         x = dsp.norm(x)
     elif mode == Mode.Float:
         x, indices = voss(num_samples,generators)
+        x = dsp.norm(x)
+    elif mode == Mode.FloatStoch:
+        x, indices = voss_stoch(num_samples,generators)
         x = dsp.norm(x)
     else:
         assert False
