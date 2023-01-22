@@ -117,6 +117,7 @@ def voss_stoch(num_samples,generators):
                 previous_index = j
                 break
 
+        #index = trailing_bits( int(r*(rollover)) )
         indices[i] = index
     
         noise_array[index].noise.Update()
@@ -182,10 +183,10 @@ def voss32(num_samples,generators):
 
 
 fs = 48000
-num_samples = 4096 * 4
+num_samples = 4096 * 8
 num_tests = 250
 generators = 15
-mode = Mode.Float
+mode = Mode.FloatStoch
 
 print(f'Voss-McCartney Pink Noise Generator')
 print(f'    Sample Rate: {fs}') 
@@ -222,6 +223,12 @@ ideal_db, ideal_f = dsp.generate_decade_line(10, 100000)
 X_slope, _, _, _, _ = stats.linregress( np.log10( Xf, where=Xf > 0 ), np.log10( dsp.gain( Xdb ) ) )
 ideal_slope, _, _, _, _ = stats.linregress( np.log10(ideal_f), np.log10( dsp.gain(ideal_db) ) )
 
+indices_used, instances = np.unique(indices, return_counts=True)
+
+print(f'\nIndex Analysis')
+for i in range(len(indices_used)):
+    print(f'{indices_used[i]} = {instances[i]} ({instances[i]/num_samples:.5f}%)')
+print(f'\nGradient Analysis')
 print(f' Pink Slope: {X_slope:.2f}')
 print(f'Ideal Slope: {ideal_slope:.2f}')
 
