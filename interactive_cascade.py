@@ -58,6 +58,8 @@ class FilterControl:
         self.fslider.on_changed(self.freq_changed)
 
 fs = 48000
+num_decades = np.ceil(np.log10(fs/2))
+print(f'Decades: {num_decades}')
 sig_len = 8192 * 8
 
 axcolor = 'lightgoldenrodyellow'
