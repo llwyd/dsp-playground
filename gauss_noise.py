@@ -10,7 +10,7 @@ import noise
 import random
 from enum import Enum
 
-num_samples = 4096
+num_samples = 8192
 num_sources = 12
 offset = num_sources / 2
 fs = 48000
@@ -30,9 +30,18 @@ top = np.max(x)
 for i in range(num_samples):
     y[i] = ( random.random() * top * 2 ) - (top)
 
+X, Xf, Xdb = dsp.fft(x, fs, len(x),norm='ortho' )
+Y, Yf, Ydb = dsp.fft(y, fs, len(x),norm='ortho' )
+
 bins = 40
 plt.figure(1)
+plt.subplot(2,1,2)
 plt.hist(x, density=True,bins=bins,histtype='step')
 plt.hist(y, density=True,bins=bins,histtype='step')
+plt.subplot(2,2,1)
+plt.semilogx(Xf,Xdb)
+plt.subplot(2,2,2)
+plt.semilogx(Yf,Ydb)
+
 plt.show()
 
