@@ -72,14 +72,14 @@ def db_gain( g ):
 def get_alpha( fc, fs ):
     # Wikipedia
     #alpha = 1 / ( (1/(2*np.pi*(fc/fs))) + 1)
-    alpha = 1 - np.exp( -2 * np.pi * ( fc / fs ) )
+    alpha = np.exp( -2 * np.pi * ( fc / fs ) )
     return alpha
 
 def ewma( alpha, length ):
     dirac = signal.unit_impulse( length )
     y = np.zeros( length )
     for i in range( length ):
-        y[i] = y[i-1] + ( alpha * ( dirac[i] - y[i-1] ) )
+        y[i] = dirac[i] + ( alpha * ( dirac[i] - y[i-1] ) )
     return y
 
 def generate_decade_line(start_mag, end_freq):
