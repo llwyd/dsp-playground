@@ -5,5 +5,8 @@ project( dsp )
 set (CMAKE_C_STANDARD 11 )
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY bin/ )
 
+add_compile_options( -Wall -lalsa )
+
 add_executable( playback.out
-                src/audio_playback.c )
+                src/audio_playback.c
+                src/audio.c )
