@@ -12,3 +12,4 @@ add_executable( playback.out
                 src/audio.h )
 
 target_link_libraries( playback.out asound)
+target_link_libraries( playback.out m)
