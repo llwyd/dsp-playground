@@ -9,6 +9,17 @@
 #define LATENCY ( 10000U ) /* us */
 #define CHANNELS ( 1U )
 
+#define ALSA_FUNC(X) \
+{ \
+    err = (X) ; \
+    if( err < 0 ) \
+    { \
+        printf("Failed to open: %s\n", \
+                snd_strerror(err)); \
+        assert(false); \
+    } \
+} \
+
 static snd_pcm_t * handle;
 static snd_pcm_uframes_t offset;
 static snd_pcm_uframes_t frames;
@@ -47,12 +58,18 @@ extern void Audio_GenerateSine( void )
     }
 
     uint32_t * ptr = (uint32_t *)areas[0].addr; /* Initial location */
-    ptr += (areas[0].first / 32);
-    ptr += offset;
+    const uint32_t * const start = ptr;
+    
+    ptr += (areas[0].first);
+    ptr += offset; 
 
     for( uint32_t idx = 0; idx < frames ; idx++ )
     {
         *ptr++ = *write_ptr++;
+        if (write_ptr == &tone[FS-1] )
+        {
+            break;
+        }
     }
     
     err = snd_pcm_mmap_commit(handle, offset, frames);
@@ -80,48 +97,32 @@ extern void Audio_Loop( void )
 extern void Audio_Init(void)
 {
     GenerateTone();
-    int err = snd_pcm_open( &handle,
+    int err;
+    ALSA_FUNC(snd_pcm_open( &handle,
                             "plughw:0,0",
                     SND_PCM_STREAM_PLAYBACK,
-                    SND_PCM_NONBLOCK);
+                    SND_PCM_NONBLOCK));
 
-    if( err < 0 )
-    {
-        printf("Failed to open: %s\n", 
-                snd_strerror(err));
-        assert(false);
-    }
-    err = snd_pcm_set_params( handle,
+    ALSA_FUNC(snd_pcm_set_params( handle,
                         SND_PCM_FORMAT_U32_LE, 	        /* little endian*/
                         SND_PCM_ACCESS_MMAP_NONINTERLEAVED,	/* interleaved */
                         CHANNELS,				/* channels */
                         FS,				        /* sample rate */
                         2,				        /* alsa resampling */
-                        LATENCY);			        /* desired latency */
-    if( err < 0 )
-    {
-        printf("Failed to open: %s\n", 
-                snd_strerror(err));
-        assert(false);
-    }
+                        LATENCY));			        /* desired latency */
     
     frames = snd_pcm_avail_update( handle );
     Audio_GenerateSine();
 
-    err = snd_pcm_start( handle );
-    if( err < 0 )
-    {
-        printf("Failed to open: %s\n", 
-                snd_strerror(err));
-        assert(false);
-    }
-    err = snd_pcm_prepare( handle );
+    ALSA_FUNC( snd_pcm_start( handle ) );
+    snd_pcm_prepare( handle );
 }
 
 extern void Audio_Close(void)
 {
     assert( handle != NULL );
-    snd_pcm_drain(handle);
-    snd_pcm_close(handle);
+    int err;
+    ALSA_FUNC( snd_pcm_drain(handle) );
+    ALSA_FUNC( snd_pcm_close(handle) );
 }
 
