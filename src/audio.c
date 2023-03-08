@@ -14,7 +14,7 @@
     err = (X) ; \
     if( err < 0 ) \
     { \
-        printf("Failed to open: %s\n", \
+        printf("ALSA error!: %s\n", \
                 snd_strerror(err)); \
         assert(false); \
     } \
@@ -49,13 +49,8 @@ extern void GenerateTone( void )
 extern void Audio_GenerateSine( void )
 {
     const snd_pcm_channel_area_t * areas;
-    int err = snd_pcm_mmap_begin(handle, &areas, &offset, &frames);
-    if( err < 0 )
-    {
-        printf("Failed to open: %s\n", 
-                snd_strerror(err));
-        assert(false);
-    }
+    int err;
+    ALSA_FUNC(snd_pcm_mmap_begin(handle, &areas, &offset, &frames));
 
     uint32_t * ptr = (uint32_t *)areas[0].addr; /* Initial location */
     const uint32_t * const start = ptr;
@@ -72,13 +67,7 @@ extern void Audio_GenerateSine( void )
         }
     }
     
-    err = snd_pcm_mmap_commit(handle, offset, frames);
-    if( err < 0 )
-    {
-        printf("Failed to open: %s\n", 
-                snd_strerror(err));
-        assert(false);
-    }
+    ALSA_FUNC (snd_pcm_mmap_commit(handle, offset, frames) );
 }
 
 extern void Audio_Loop( void )
@@ -115,14 +104,14 @@ extern void Audio_Init(void)
     Audio_GenerateSine();
 
     ALSA_FUNC( snd_pcm_start( handle ) );
-    snd_pcm_prepare( handle );
+    //ALSA_FUNC( snd_pcm_prepare( handle ) );
 }
 
 extern void Audio_Close(void)
 {
     assert( handle != NULL );
     int err;
-    ALSA_FUNC( snd_pcm_drain(handle) );
+    ALSA_FUNC( snd_pcm_drop(handle) );
     ALSA_FUNC( snd_pcm_close(handle) );
 }
 
