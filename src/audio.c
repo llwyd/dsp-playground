@@ -11,7 +11,7 @@
 
 #define ALSA_FUNC(X) \
 { \
-    err = (X) ; \
+    int err = (X) ; \
     if( err < 0 ) \
     { \
         printf("ALSA error!: %s\n", \
@@ -24,6 +24,7 @@ static snd_pcm_t * handle;
 static snd_pcm_uframes_t offset;
 static snd_pcm_uframes_t frames;
 static snd_pcm_uframes_t size;
+static const snd_pcm_channel_area_t * areas;
 
 static uint32_t tone[FS];
 static uint32_t *write_ptr = tone;
@@ -46,10 +47,29 @@ extern void GenerateTone( void )
     }
 }
 
+extern uint32_t * Audio_GetChannelBuffer( uint32_t index )
+{
+    assert( index < ( CHANNELS - 1U ) );
+    
+    ALSA_FUNC(snd_pcm_mmap_begin(handle, &areas, &offset, &frames));
+    uint32_t * ptr = (uint32_t *)areas[index].addr; /* Initial location */
+
+    /* Add first offset (in bits ) */    
+    ptr += ( areas[index].first / 32 );
+
+    /* Offset is in frames */
+    ptr += (offset);
+    
+    return ptr;
+}
+
+extern void Audio_CommitSamples( void )
+{
+    ALSA_FUNC (snd_pcm_mmap_commit(handle, offset, frames) );
+}
+
 extern void Audio_GenerateSine( void )
 {
-    const snd_pcm_channel_area_t * areas;
-    int err;
     ALSA_FUNC(snd_pcm_mmap_begin(handle, &areas, &offset, &frames));
 
     uint32_t * ptr = (uint32_t *)areas[0].addr; /* Initial location */
@@ -86,7 +106,6 @@ extern void Audio_Loop( void )
 extern void Audio_Init(void)
 {
     GenerateTone();
-    int err;
     ALSA_FUNC(snd_pcm_open( &handle,
                             "plughw:0,0",
                     SND_PCM_STREAM_PLAYBACK,
@@ -110,7 +129,6 @@ extern void Audio_Init(void)
 extern void Audio_Close(void)
 {
     assert( handle != NULL );
-    int err;
     ALSA_FUNC( snd_pcm_drop(handle) );
     ALSA_FUNC( snd_pcm_close(handle) );
 }
