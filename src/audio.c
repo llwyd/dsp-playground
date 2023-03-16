@@ -26,39 +26,40 @@ static snd_pcm_uframes_t frames;
 static snd_pcm_uframes_t size;
 static const snd_pcm_channel_area_t * areas;
 
-static uint32_t tone[FS];
-static uint32_t *write_ptr = tone;
+static uint32_t * ptr;
 
 extern snd_pcm_uframes_t Audio_FramesToWrite( void )
 {
-    return snd_pcm_avail_update( handle );
+    frames = snd_pcm_avail_update( handle );
+    return frames;
 }
 
-extern void GenerateTone( void )
+extern uint32_t Audio_GenerateSineSample( float freq )
 {
+    static int idx = 0;
     const float fs = (float)FS;
-    const float freq = 1000.f;
     const float T = 1.f / fs;
-
-    for( int idx = 0; idx < FS; idx++ )
-    {
-        float x_f = sinf( 2 * M_PI * freq * T * (float)idx )+ 1.0f;
-        tone[idx] = (uint32_t)( ( x_f / 2.0f )*( (float)(UINT32_MAX) ) );
-    }
+    
+    double x_f = sin( 2 * M_PI * freq * T * (float)idx )+ 1.0f;
+    
+    idx++;
+    return ((uint32_t)( ( x_f / 2.0f )*( (double)(UINT32_MAX) ) ));
 }
 
 extern uint32_t * Audio_GetChannelBuffer( uint32_t index )
 {
-    assert( index < ( CHANNELS - 1U ) );
+    assert( index < CHANNELS );
     
     ALSA_FUNC(snd_pcm_mmap_begin(handle, &areas, &offset, &frames));
-    uint32_t * ptr = (uint32_t *)areas[index].addr; /* Initial location */
+    ptr = (uint32_t *)areas[index].addr; /* Initial location */
+
+    assert( areas[index].step == 32 );
 
     /* Add first offset (in bits ) */    
-    ptr += ( areas[index].first / 32 );
+    ptr += ( areas[index].first >> 5U );
 
     /* Offset is in frames */
-    ptr += (offset);
+    ptr += offset;
     
     return ptr;
 }
@@ -68,46 +69,10 @@ extern void Audio_CommitSamples( void )
     ALSA_FUNC (snd_pcm_mmap_commit(handle, offset, frames) );
 }
 
-extern void Audio_GenerateSine( void )
-{
-    ALSA_FUNC(snd_pcm_mmap_begin(handle, &areas, &offset, &frames));
-
-    uint32_t * ptr = (uint32_t *)areas[0].addr; /* Initial location */
-    const uint32_t * const start = ptr;
-    
-    ptr += (areas[0].first);
-    ptr += offset; 
-
-    for( uint32_t idx = 0; idx < frames ; idx++ )
-    {
-        *ptr++ = *write_ptr++;
-        if (write_ptr == &tone[FS-1] )
-        {
-            break;
-        }
-    }
-    
-    ALSA_FUNC (snd_pcm_mmap_commit(handle, offset, frames) );
-}
-
-extern void Audio_Loop( void )
-{
-    while( write_ptr != &tone[FS-1] )
-    {
-        frames = snd_pcm_avail_update( handle );
-        if( frames > 0 )
-        {
-            printf("Frames: %lld\n", frames );
-            Audio_GenerateSine();
-        }
-    }
-}
-
 extern void Audio_Init(void)
 {
-    GenerateTone();
     ALSA_FUNC(snd_pcm_open( &handle,
-                            "plughw:0,0",
+                            "plughw:1,0",
                     SND_PCM_STREAM_PLAYBACK,
                     SND_PCM_NONBLOCK));
 
@@ -119,11 +84,14 @@ extern void Audio_Init(void)
                         2,				        /* alsa resampling */
                         LATENCY));			        /* desired latency */
     
-    frames = snd_pcm_avail_update( handle );
-    Audio_GenerateSine();
-
+    (void)Audio_FramesToWrite();
+    (void)Audio_GetChannelBuffer( 0 );
+    for( uint32_t idx = 0; idx < frames; idx++ )
+    {
+        *ptr++ = 0U;
+    }
+    Audio_CommitSamples();
     ALSA_FUNC( snd_pcm_start( handle ) );
-    //ALSA_FUNC( snd_pcm_prepare( handle ) );
 }
 
 extern void Audio_Close(void)

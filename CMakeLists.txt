@@ -7,7 +7,7 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY bin/ )
 set (CMAKE_BUILD_TYPE Debug )
 
 add_executable( playback.out
-                src/audio_playback.c
+                src/simple_playback.c
                 src/audio.c
                 src/audio.h )
 
