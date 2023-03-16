@@ -28,10 +28,10 @@ static const snd_pcm_channel_area_t * areas;
 
 static uint32_t * ptr;
 
-extern snd_pcm_uframes_t Audio_FramesToWrite( void )
+extern snd_pcm_uframes_t * Audio_FramesToWrite( void )
 {
     frames = snd_pcm_avail_update( handle );
-    return frames;
+    return &frames;
 }
 
 extern uint32_t Audio_GenerateSineSample( float freq )

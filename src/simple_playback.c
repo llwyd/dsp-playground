@@ -20,11 +20,11 @@ int main( int argc, char ** argv )
 
     while(1)
     {
-        snd_pcm_uframes_t frames = Audio_FramesToWrite();
+        snd_pcm_uframes_t * frames = Audio_FramesToWrite();
         if( frames > 0 )
         {
             uint32_t * ptr = Audio_GetChannelBuffer( 0 );
-            for( uint32_t idx = 0; idx < frames; idx++ )
+            for( uint32_t idx = 0; idx < *frames; idx++ )
             {
                 ptr[idx] = Audio_GenerateSineSample( 1000.0f );
             }
