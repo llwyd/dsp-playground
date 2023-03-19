@@ -31,15 +31,14 @@ extern bool Audio_FramesAvailable( void )
     return( snd_pcm_avail_update( handle ) > 0 );
 }
 
-extern uint32_t Audio_GenerateSineSample( float freq )
+extern uint32_t Audio_GenerateSineSample( uint32_t * index, float freq )
 {
-    static int idx = 0;
     const float fs = (float)FS;
     const float T = 1.f / fs;
     
-    double x_f = sin( 2 * M_PI * freq * T * (float)idx )+ 1.0f;
+    double x_f = sin( 2 * M_PI * freq * T * (float)(*index) )+ 1.0f;
     
-    idx++;
+    (*index)++;
     return ((uint32_t)( ( x_f / 2.0f )*( (double)(UINT32_MAX) ) ));
 }
 
@@ -93,7 +92,6 @@ extern void Audio_Init( uint32_t numChannels )
     assert( numChannels > 0 );
     assert( numChannels <= 2 );
 
-    uint32_t * buffer;
     channels = numChannels;
     ALSA_FUNC(snd_pcm_open( &handle,
                             "plughw:1,0",
@@ -109,11 +107,31 @@ extern void Audio_Init( uint32_t numChannels )
                         LATENCY));			                /* desired latency */
     
     assert( Audio_FramesAvailable() );
-    snd_pcm_uframes_t frames = Audio_GetMonoBuffer( &buffer );
-    for( uint32_t idx = 0; idx < frames; idx++ )
+    snd_pcm_uframes_t frames; 
+    if( channels == 1U )
     {
-        *buffer++ = 0U;
+        uint32_t * buffer;
+        frames = Audio_GetMonoBuffer( &buffer );
+        for( uint32_t idx = 0; idx < frames; idx++ )
+        {
+            *buffer++ = 0U;
+        }
     }
+    else if( channels == 2U )
+    {
+        uint32_t * left, * right;
+        frames = Audio_GetStereoBuffers(&left, &right );
+        for( uint32_t idx = 0; idx < frames; idx++ )
+        {
+            *left++ = 0U;
+            *right++ = 0U;
+        }
+    }
+    else
+    {
+        assert( false );
+    }
+
     Audio_CommitSamples(frames);
     ALSA_FUNC( snd_pcm_start( handle ) );
 }

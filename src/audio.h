@@ -7,9 +7,10 @@
 
 extern void Audio_Init( uint32_t numChannels );
 extern void Audio_Close(void);
-extern uint32_t Audio_GenerateSineSample( float freq );
+extern uint32_t Audio_GenerateSineSample( uint32_t * index, float freq );
 extern void Audio_CommitSamples( snd_pcm_uframes_t frames );
 extern snd_pcm_uframes_t Audio_GetMonoBuffer( uint32_t ** ptr );
+extern snd_pcm_uframes_t Audio_GetStereoBuffers( uint32_t ** left, uint32_t ** right );
 extern bool Audio_FramesAvailable( void );
 
 #endif /* AUDIO_H_ */
