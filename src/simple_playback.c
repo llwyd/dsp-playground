@@ -15,20 +15,20 @@ static void StopAudio(int sig)
 
 int main( int argc, char ** argv )
 {
-    Audio_Init();
+    Audio_Init(1U);
     signal(SIGINT, StopAudio);
 
     while(1)
     {
-        snd_pcm_uframes_t * frames = Audio_FramesToWrite();
-        if( frames > 0 )
+        if( Audio_FramesAvailable() )
         {
-            uint32_t * ptr = Audio_GetChannelBuffer( 0 );
-            for( uint32_t idx = 0; idx < *frames; idx++ )
+            uint32_t * ptr;
+            snd_pcm_uframes_t frames = Audio_GetMonoBuffer( &ptr );
+            for( uint32_t idx = 0; idx < frames; idx++ )
             {
                 ptr[idx] = Audio_GenerateSineSample( 1000.0f );
             }
-            Audio_CommitSamples();
+            Audio_CommitSamples( frames );
         } 
     }
     return 0;
