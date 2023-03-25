@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <signal.h>
+#include <time.h>
 
 static void StopAudio(int sig)
 {
@@ -47,7 +48,11 @@ void SuperLoop( void )
         }
         case AUDIOSTATE_IDLE:
         {
-            /* Do something else */
+            struct timespec delay;
+            delay.tv_sec = 0;
+            delay.tv_nsec = 5000000;
+            
+            nanosleep( &delay, NULL );
             break;
         } 
         case AUDIOSTATE_COUNT:
