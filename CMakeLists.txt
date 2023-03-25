@@ -16,8 +16,17 @@ add_executable( stereo_playback.out
                 src/audio.c
                 src/audio.h )
 
+
+add_executable( audio_sm.out
+                src/audio_sm.c
+                src/audio.c
+                src/audio.h )
+
 target_link_libraries( playback.out asound)
 target_link_libraries( playback.out m)
 
 target_link_libraries( stereo_playback.out asound)
 target_link_libraries( stereo_playback.out m)
+
+target_link_libraries( audio_sm.out asound)
+target_link_libraries( audio_sm.out m)

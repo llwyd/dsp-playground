@@ -24,11 +24,40 @@ static uint32_t channels;
 static snd_pcm_t * handle;
 static snd_pcm_uframes_t offset;
 static snd_pcm_uframes_t size;
+static snd_pcm_sframes_t error;
 static const snd_pcm_channel_area_t * areas;
+
+static audio_state_t state = AUDIOSTATE_IDLE;
 
 extern bool Audio_FramesAvailable( void )
 {
     return( snd_pcm_avail_update( handle ) > 0 );
+}
+
+extern void Audio_HandleError( void )
+{
+        printf("ALSA error!: %s\n", snd_strerror(error));
+}
+
+extern audio_state_t Audio_GetState(void)
+{
+    assert( handle != NULL );
+    const snd_pcm_sframes_t frames =snd_pcm_avail_update( handle );
+    
+    if( frames > 0 )
+    {
+        state = AUDIOSTATE_NEWFRAMES;
+    }
+    else if( frames < 0 )
+    {
+        state = AUDIOSTATE_ERROR;
+        error = frames;
+    }
+    else
+    {
+        state = AUDIOSTATE_IDLE;
+    }
+    return state;
 }
 
 extern uint32_t Audio_GenerateSineSample( uint32_t * index, float freq )
@@ -44,6 +73,7 @@ extern uint32_t Audio_GenerateSineSample( uint32_t * index, float freq )
 
 extern snd_pcm_uframes_t Audio_GetMonoBuffer( uint32_t ** ptr )
 { 
+    assert( handle != NULL );
     assert( channels == 1U );
     snd_pcm_uframes_t frames;
     ALSA_FUNC(snd_pcm_mmap_begin(handle, &areas, &offset, &frames));
@@ -62,6 +92,7 @@ extern snd_pcm_uframes_t Audio_GetMonoBuffer( uint32_t ** ptr )
 
 extern snd_pcm_uframes_t Audio_GetStereoBuffers( uint32_t ** left, uint32_t ** right )
 { 
+    assert( handle != NULL );
     assert( channels == 2U );
     snd_pcm_uframes_t frames;
     ALSA_FUNC(snd_pcm_mmap_begin(handle, &areas, &offset, &frames));
@@ -84,6 +115,7 @@ extern snd_pcm_uframes_t Audio_GetStereoBuffers( uint32_t ** left, uint32_t ** r
 
 extern void Audio_CommitSamples( snd_pcm_uframes_t frames )
 {
+    assert( handle != NULL );
     ALSA_FUNC (snd_pcm_mmap_commit(handle, offset, frames) );
 }
 
@@ -91,6 +123,7 @@ extern void Audio_Init( uint32_t numChannels )
 {
     assert( numChannels > 0 );
     assert( numChannels <= 2 );
+    assert( handle == NULL );
 
     channels = numChannels;
     ALSA_FUNC(snd_pcm_open( &handle,
