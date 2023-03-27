@@ -35,7 +35,7 @@ def q_to_float(num, e):
 
     fract = 0.0
     for i in range(e):
-        shift = 15 - i
+        shift = e - i
         bit = ( fract_part >> shift ) & 1
         fract += float(bit) * np.power(2.0, -i)
 
