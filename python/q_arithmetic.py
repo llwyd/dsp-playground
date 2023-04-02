@@ -14,22 +14,37 @@ max_exp = 16
 
 def convert_to_q(num, q) -> np.uint32:
     assert( q < max_exp )
-    q_num = np.uint32(num * np.float32( 1 << q ) )
-    print(f'float to Q{q} conversion {num} -> {bin(q_num)}')
+    q_num = np.int32(num * np.float32( 1 << q ) )
+#    print(f'float to Q{q} conversion {num} -> {bin(q_num)}')
     return q_num
 
 def q_to_float(num, q):
     assert( q < max_exp )
     result = np.float32( np.float32(np.int32(num)) / np.float32( 1 << q ) )
-    print(f'Q{q} to float conversion {bin(num)} -> {result}')
+#    print(f'Q{q} to float conversion {bin(num)} -> {result}')
     return result
 
+
+q = 4
 a = 0.666
-a_q  = convert_to_q(a,15)
-q_to_float(a_q,15)
+a_q  = convert_to_q(a,q)
+q_to_float(a_q,q)
 
 print("")
 a = -0.666
-a_q  = convert_to_q(a,15)
-q_to_float(a_q,15)
+a_q  = convert_to_q(a,q)
+q_to_float(a_q,q)
+
+
+num_samples = 4096
+fs = 48000
+f = 50
+t = np.linspace(0,num_samples - 1, num_samples)
+x = np.sin( 2 * np.pi * f * t / fs )
+
+y = convert_to_q(x,15)
+plt.plot(y)
+plt.show()
+
+
 
