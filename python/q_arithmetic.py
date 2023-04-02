@@ -12,16 +12,22 @@ from enum import Enum
 int_type = np.uint32
 max_exp = 32
 
-def convert_to_q(num, q) -> np.uint32:
+def convert_to_q(num, q, dbg_output = False) -> np.int32:
     assert( q < max_exp )
     q_num = np.int32(num * np.float32( 1 << q ) )
-#    print(f'float to Q{q} conversion {num} -> {bin(q_num)}')
+    
+    if dbg_output:
+        print(f'float to Q{q} conversion {num} -> {bin(q_num)}')
+    
     return q_num
 
-def q_to_float(num, q):
+def q_to_float(num, q, dbg_output = False) -> np.float32:
     assert( q < max_exp )
     result = np.float32( np.float32(np.int32(num)) / np.float32( 1 << q ) )
-#    print(f'Q{q} to float conversion {bin(num)} -> {result}')
+    
+    if dbg_output:
+        print(f'Q{q} to float conversion {bin(num)} -> {result}')
+    
     return result
 
 
