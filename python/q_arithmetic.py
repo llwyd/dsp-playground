@@ -30,7 +30,14 @@ def q_to_float(num, q, dbg_output = False) -> np.float32:
     
     return result
 
-
+def float_to_q16bit(num, q, dbg_output = False) -> np.int16:
+    assert( q < 16 )
+    q_num = np.int16(num * np.float32( 1 << q ) )
+    
+    if dbg_output:
+        print(f'float to Q{q} conversion {num} -> {bin(q_num)}')
+    
+    return q_num
 
 if __name__ == "__main__":
     q = 31
