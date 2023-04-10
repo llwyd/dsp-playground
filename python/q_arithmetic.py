@@ -39,6 +39,14 @@ def float_to_q16bit(num, q, dbg_output = False) -> np.int16:
     
     return q_num
 
+def mul16(a,b,q):
+    assert( q < 16 )
+
+    temp = ( np.int32(a) * np.int32(b) ) >> q
+
+    return np.int16( temp & 0xFFFF )
+
+
 if __name__ == "__main__":
     q = 31
     a = 0.666
