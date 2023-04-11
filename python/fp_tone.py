@@ -6,12 +6,15 @@ import dsp
 import q_arithmetic as q_math
 
 
-num_samples = 4000
-fs = 44100
-f = 20
+def get_delta(f,fs):
+    return 2*np.pi*(1/fs)*f
 
-phi = 0.01
-delta = 0.01
+num_samples = 8192
+fs = 44100
+f = 5000
+
+phi = 0.00001
+delta = get_delta(f,fs)
 
 q = 15
 
@@ -56,7 +59,11 @@ for i in range(1,num_samples):
     y_s_q[i] = q_math.mul16(y_s_q[i-1],c_delta_q,q) + q_math.mul16(y_c_q[i-1],s_delta_q,q)
     y_c_q[i] = q_math.mul16(y_c_q[i-1],c_delta_q,q) - q_math.mul16(y_s_q[i-1],s_delta_q,q)
 
+Y,Yf,Ydb = dsp.fft(y_s,fs,num_samples,norm='ortho')
+
+plt.subplot(2,1,1)
 plt.plot(y_s)
-plt.plot(y_c)
+plt.subplot(2,1,2)
+plt.semilogx(Yf,Ydb)
 plt.show()
 
