@@ -39,6 +39,15 @@ def float_to_q16bit(num, q, dbg_output = False) -> np.int16:
     
     return q_num
 
+def q16bit_to_float(num, q, dbg_output = False) -> np.float32:
+    assert( q < max_exp )
+    result = np.float32( np.float32(np.int16(num)) / np.float32( 1 << q ) )
+    
+    if dbg_output:
+        print(f'Q{q} to float conversion {bin(num)} -> {result}')
+    
+    return result
+
 def mul16(a,b,q):
     assert( q < 16 )
 
@@ -48,26 +57,9 @@ def mul16(a,b,q):
 
 
 if __name__ == "__main__":
-    q = 31
-    a = 0.666
-    a_q  = convert_to_q(a,q)
-    q_to_float(a_q,q)
 
-    print("")
-    a = -0.666
-    a_q  = convert_to_q(a,q)
-    q_to_float(a_q,q)
-
-
-    num_samples = 4096
-    fs = 48000
-    f = 50
-    t = np.linspace(0,num_samples - 1, num_samples)
-    x = np.sin( 2 * np.pi * f * t / fs ) * 0.9999999
-
-    y = convert_to_q(x,q)
-    plt.plot(y)
-    plt.show()
-
+    fs = 44100
+    omega = 2*np.pi*(1/fs)
+    omega_q = float_to_q16bit(omega,15,True)
 
 
