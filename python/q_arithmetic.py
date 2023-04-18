@@ -48,12 +48,27 @@ def q16bit_to_float(num, q, dbg_output = False) -> np.float32:
     
     return result
 
-def mul16(a,b,q):
+def mul16(a,b,q) -> np.int16:
     assert( q < 16 )
 
     temp = ( np.int32(a) * np.int32(b) ) >> q
 
     return np.int16( temp & 0xFFFF )
+
+def convert( x, q_old, q_new, dbg_output = False ) -> np.int16:
+    assert( q_old < max_exp )
+    assert( q_new < max_exp )
+
+    if(  q_new > q_old ):
+        y = x << (q_new - q_old)
+    elif( q_new < q_old):
+        y = x >> (q_old - q_new)
+    else:
+        y = x
+    
+    if dbg_output:
+        print(f'Converting from Q{q_old} to Q{q_new} ( {bin(x)} -> {bin(y)} )')
+    return np.int16(y)
 
 
 if __name__ == "__main__":
