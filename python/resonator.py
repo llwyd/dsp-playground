@@ -22,6 +22,10 @@ y = np.zeros(num_samples)
 for i in range(num_samples):
     y[i] = ( x[i] * b0 ) - (a1*y[i-1]) - (a2 * y[i-2])
 
+Y,Yf,Ydb = dsp.fft(y,fs,num_samples,norm='ortho')
+plt.subplot(2,1,1)
 plt.plot(y)
+plt.subplot(2,1,2)
+plt.semilogx(Yf,Ydb)
 plt.show()
 
