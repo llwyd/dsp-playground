@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <signal.h>
 #include <time.h>
+#include "resonator.h"
 
 static void StopAudio(int sig)
 {

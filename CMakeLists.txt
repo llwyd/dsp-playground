@@ -20,7 +20,10 @@ add_executable( stereo_playback.out
 add_executable( audio_sm.out
                 src/audio_sm.c
                 src/audio.c
-                src/audio.h )
+                src/audio.h 
+                src/resonator.c
+                src/resonator.h
+                src/types.h)
 
 target_link_libraries( playback.out asound)
 target_link_libraries( playback.out m)
