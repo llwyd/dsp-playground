@@ -9,15 +9,6 @@
 static resonator_t left_tone;
 static resonator_t right_tone;
 
-static void StopAudio(int sig)
-{
-    signal(sig, SIG_IGN);
-    printf("\b\bClosing ALSA Interface\n");
-    Audio_Close();
-    printf("FIN\n");
-    exit(0);
-}
-
 static void Delay(void)
 {
     struct timespec delay;
@@ -29,9 +20,6 @@ static void Delay(void)
 
 static void ComputeNextSamples( void )
 {
-    static uint32_t left_idx = 0U;
-    static uint32_t right_idx = 0U;
-    
     float32_t * left, * right;
     snd_pcm_uframes_t frames = Audio_GetStereoBuffers( &left, &right );
     for( uint32_t idx = 0; idx < frames; idx++ )
@@ -92,7 +80,6 @@ static void Init(void)
     Resonator_Init( &right_tone, &right_config);
 
     Audio_Init(2U);
-    signal(SIGINT, StopAudio);
 }
 
 int main( int argc, char ** argv )

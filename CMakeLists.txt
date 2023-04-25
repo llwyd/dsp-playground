@@ -25,6 +25,11 @@ add_executable( audio_sm.out
                 src/resonator.h
                 src/types.h)
 
+target_compile_options( audio_sm.out
+                        PUBLIC
+                        -Wall
+                        -Werror )
+
 #target_link_libraries( playback.out asound)
 #target_link_libraries( playback.out m)
 

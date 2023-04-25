@@ -1,4 +1,5 @@
 #include "audio.h"
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -24,11 +25,17 @@
 static uint32_t channels;
 static snd_pcm_t * handle;
 static snd_pcm_uframes_t offset;
-static snd_pcm_uframes_t size;
 static snd_pcm_sframes_t error;
 static const snd_pcm_channel_area_t * areas;
 
 static audio_state_t state = AUDIOSTATE_IDLE;
+
+static void StopAudio(int sig)
+{
+    signal(sig, SIG_IGN);
+    Audio_Close();
+    exit(0);
+}
 
 extern bool Audio_FramesAvailable( void )
 {
@@ -61,24 +68,14 @@ extern audio_state_t Audio_GetState(void)
     return state;
 }
 
-extern uint32_t Audio_GenerateSineSample( uint32_t * index, float freq )
-{
-    const float fs = (float)FS;
-    const float T = 1.f / fs;
-    
-    double x_f = sin( 2 * M_PI * freq * T * (float)(*index) )+ 1.0f;
-    
-    (*index)++;
-    return ((uint32_t)( ( x_f / 2.0f )*( (double)(UINT32_MAX) ) ));
-}
 
-extern snd_pcm_uframes_t Audio_GetMonoBuffer( uint32_t ** ptr )
+extern snd_pcm_uframes_t Audio_GetMonoBuffer( float32_t ** ptr )
 { 
     assert( handle != NULL );
     assert( channels == 1U );
     snd_pcm_uframes_t frames;
     ALSA_FUNC(snd_pcm_mmap_begin(handle, &areas, &offset, &frames));
-    *ptr = (uint32_t *)areas[0U].addr; /* Initial location */
+    *ptr = (float32_t *)areas[0U].addr; /* Initial location */
 
     assert( areas[0U].step == 32 );
 
@@ -127,13 +124,16 @@ extern void Audio_Init( uint32_t numChannels )
     assert( handle == NULL );
 
     channels = numChannels;
+    
+    signal(SIGINT, StopAudio);
+    
     ALSA_FUNC(snd_pcm_open( &handle,
                             "plughw:1,0",
                             SND_PCM_STREAM_PLAYBACK,
                             SND_PCM_NONBLOCK));
 
     ALSA_FUNC(snd_pcm_set_params( handle,
-                        SND_PCM_FORMAT_FLOAT_LE, 	            /* little endian*/
+                        SND_PCM_FORMAT_FLOAT_LE, 	        /* little endian*/
                         SND_PCM_ACCESS_MMAP_NONINTERLEAVED,	/* interleaved */
                         channels,				            /* channels */
                         FS,				                    /* sample rate */
@@ -144,7 +144,7 @@ extern void Audio_Init( uint32_t numChannels )
     snd_pcm_uframes_t frames; 
     if( channels == 1U )
     {
-        uint32_t * buffer;
+        float32_t * buffer;
         frames = Audio_GetMonoBuffer( &buffer );
         for( uint32_t idx = 0; idx < frames; idx++ )
         {
