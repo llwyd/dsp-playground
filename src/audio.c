@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <math.h>
+#include "types.h"
 
 #define FS ( 44100U ) /* Hz */
 #define LATENCY ( 10000U ) /* us */
@@ -36,7 +37,7 @@ extern bool Audio_FramesAvailable( void )
 
 extern void Audio_HandleError( void )
 {
-        printf("ALSA error!: %s\n", snd_strerror(error));
+    printf("ALSA error!: %s\n", snd_strerror(error));
 }
 
 extern audio_state_t Audio_GetState(void)
@@ -90,14 +91,14 @@ extern snd_pcm_uframes_t Audio_GetMonoBuffer( uint32_t ** ptr )
     return frames;
 }
 
-extern snd_pcm_uframes_t Audio_GetStereoBuffers( uint32_t ** left, uint32_t ** right )
+extern snd_pcm_uframes_t Audio_GetStereoBuffers( float32_t ** left, float32_t ** right )
 { 
     assert( handle != NULL );
     assert( channels == 2U );
     snd_pcm_uframes_t frames;
     ALSA_FUNC(snd_pcm_mmap_begin(handle, &areas, &offset, &frames));
-    *left = (uint32_t *)areas[0U].addr; /* Initial location */
-    *right = (uint32_t *)areas[1U].addr; /* Initial location */
+    *left = (float32_t *)areas[0U].addr; /* Initial location */
+    *right = (float32_t *)areas[1U].addr; /* Initial location */
 
     assert( areas[0U].step == 32 );
     assert( areas[1U].step == 32 );
@@ -132,7 +133,7 @@ extern void Audio_Init( uint32_t numChannels )
                             SND_PCM_NONBLOCK));
 
     ALSA_FUNC(snd_pcm_set_params( handle,
-                        SND_PCM_FORMAT_U32_LE, 	            /* little endian*/
+                        SND_PCM_FORMAT_FLOAT_LE, 	            /* little endian*/
                         SND_PCM_ACCESS_MMAP_NONINTERLEAVED,	/* interleaved */
                         channels,				            /* channels */
                         FS,				                    /* sample rate */
@@ -152,7 +153,7 @@ extern void Audio_Init( uint32_t numChannels )
     }
     else if( channels == 2U )
     {
-        uint32_t * left, * right;
+        float32_t * left, * right;
         frames = Audio_GetStereoBuffers(&left, &right );
         for( uint32_t idx = 0; idx < frames; idx++ )
         {

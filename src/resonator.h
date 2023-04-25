@@ -5,8 +5,7 @@ typedef struct
 {
     float32_t a1;
     float32_t a2;
-    float32_t b0;
-    float32_t storage[2];
+    float32_t y[2];
 }
 resonator_t;
 

@@ -4,6 +4,7 @@
 #include "alsa/asoundlib.h"
 #include <stdint.h>
 #include <stdbool.h>
+#include "types.h"
 
 typedef enum
 {
@@ -21,7 +22,7 @@ extern void Audio_HandleError();
 extern uint32_t Audio_GenerateSineSample( uint32_t * index, float freq );
 extern void Audio_CommitSamples( snd_pcm_uframes_t frames );
 extern snd_pcm_uframes_t Audio_GetMonoBuffer( uint32_t ** ptr );
-extern snd_pcm_uframes_t Audio_GetStereoBuffers( uint32_t ** left, uint32_t ** right );
+extern snd_pcm_uframes_t Audio_GetStereoBuffers( float32_t ** left, float32_t ** right );
 extern bool Audio_FramesAvailable( void );
 extern audio_state_t Audio_GetState(void);
 

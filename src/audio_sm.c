@@ -6,6 +6,9 @@
 #include <time.h>
 #include "resonator.h"
 
+static resonator_t left_tone;
+static resonator_t right_tone;
+
 static void StopAudio(int sig)
 {
     signal(sig, SIG_IGN);
@@ -15,17 +18,26 @@ static void StopAudio(int sig)
     exit(0);
 }
 
-void ComputeNextSamples( void )
+static void Delay(void)
+{
+    struct timespec delay;
+    delay.tv_sec = 0;
+    delay.tv_nsec = 5000000;
+          
+    nanosleep( &delay, NULL );
+}
+
+static void ComputeNextSamples( void )
 {
     static uint32_t left_idx = 0U;
     static uint32_t right_idx = 0U;
     
-    uint32_t * left, * right;
+    float32_t * left, * right;
     snd_pcm_uframes_t frames = Audio_GetStereoBuffers( &left, &right );
     for( uint32_t idx = 0; idx < frames; idx++ )
     {
-        left[idx] = Audio_GenerateSineSample( &left_idx, 1000.0f );
-        right[idx] = Audio_GenerateSineSample( &right_idx, 10000.0f );
+        left[idx] = Resonator_NewSample( &left_tone );
+        right[idx] = Resonator_NewSample( &right_tone );
     }
     Audio_CommitSamples( frames );
 }
@@ -36,24 +48,18 @@ void SuperLoop( void )
     {
         case AUDIOSTATE_NEWFRAMES:
         {
-            /* Produce new samples */
             ComputeNextSamples();
             break;
         }
         case AUDIOSTATE_ERROR:
         {
-            /* Handle Error */
             Audio_HandleError();
             Audio_Close();
             break;
         }
         case AUDIOSTATE_IDLE:
         {
-            struct timespec delay;
-            delay.tv_sec = 0;
-            delay.tv_nsec = 5000000;
-            
-            nanosleep( &delay, NULL );
+            Delay();
             break;
         } 
         case AUDIOSTATE_COUNT:
@@ -66,11 +72,32 @@ void SuperLoop( void )
     }
 }
 
-int main( int argc, char ** argv )
+static void Init(void)
 {
+    resonator_config_t left_config =
+    {
+        .freq = 1000.f,
+        .fs = 44100.f,
+        .amplitude = .95f,
+    };
+    
+    resonator_config_t right_config =
+    {
+        .freq = 10000.f,
+        .fs = 44100.f,
+        .amplitude = .95f,
+    };
+
+    Resonator_Init( &left_tone, &left_config);
+    Resonator_Init( &right_tone, &right_config);
+
     Audio_Init(2U);
     signal(SIGINT, StopAudio);
+}
 
+int main( int argc, char ** argv )
+{
+    Init();
     while(1)
     {
         SuperLoop();
