@@ -9,15 +9,15 @@ import q_arithmetic as q_math
 num_samples = 4096
 fs = 44100
 f = 100
-A = 0.95;
+A = 0.94;
 
-q = 13
+q = 15
 
 w = ( 2*np.pi*f )/ fs
 
 b0 = A*np.sin(w)
-a1 = -2 * np.cos(w)
-a2 = 1
+a1 = -1 * np.cos(w)
+a2 = 0.5
 
 w_q = q_math.float_to_q16bit(w,q,True)
 b0_q = q_math.float_to_q16bit(b0,q,True)
@@ -31,11 +31,17 @@ x_q = q_math.float_to_q16bit(x,q)
 y_q = q_math.float_to_q16bit(y,q)
 
 for i in range(num_samples):
-    y[i] = ( x[i] * b0 ) - (a1*y[i-1]) - (a2 * y[i-2])
+    y[i] = ( x[i] * b0 ) - ( (a1*y[i-1]) +  (a1*y[i-1])) - ((a2 * y[i-2]) + (a2 * y[i-2]))
 
     temp_0 = q_math.mul16(x_q[i],b0_q,q)
-    temp_1 = q_math.mul16(y_q[i-1],a1_q,q)
-    temp_2 = q_math.mul16(y_q[i-2],a2_q,q)
+    temp_11 = q_math.mul16(y_q[i-1],a1_q,q)
+    temp_12 = q_math.mul16(y_q[i-1],a1_q,q)
+    
+    temp_21 = q_math.mul16(y_q[i-2],a2_q,q)
+    temp_22 = q_math.mul16(y_q[i-2],a2_q,q)
+
+    temp_1 = temp_11 + temp_11
+    temp_2 = temp_21 + temp_22
 
     temp_3 = temp_0 - temp_1
     temp_4 = temp_3 - temp_2
