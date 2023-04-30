@@ -12,7 +12,7 @@ fs = 44100
 
 
 A = np.int16(0x7e66)
-y = np.zeros(3,dtype=np.int32)
+y = np.zeros(3,dtype=np.int16)
 z = np.zeros(num_samples,dtype=np.int32)
 
 y[0] = 0x0
@@ -22,7 +22,14 @@ y[2] = 0x0
 
 for i in range(num_samples):
 
-    y[0] = (((A*y[1])>>15) + ((A*y[1])>>15)) - y[2]
+    temp_0 = np.int32((np.int32(A) * np.int32(y[1]))  >> 15)
+
+    temp_1 = np.int32(temp_0 + temp_0)
+
+    temp_2 = np.int32(temp_1 - np.int32(y[2]))
+
+#    y[0] = (((A*y[1])>>15) + ((A*y[1])>>15)) - y[2]
+    y[0] = np.int16(temp_2)
 
     y[2] = y[1]
     y[1] = y[0]
