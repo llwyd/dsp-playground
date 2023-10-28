@@ -39,9 +39,8 @@ class FilterControl:
     def freq_changed( self, val ):
         new_freq = np.power(10, self.fslider.val)
         self.lpf.update_freq(new_freq)
-        new_gain = -10 * np.log10(new_freq)
+        new_gain = (-10 * np.log10(new_freq)) + 3
         new_gain_raw = np.power(10,new_gain/20)
-        print(f'gain: {new_gain} | {new_gain_raw}')
         self.lpf.update_gain(new_gain)
         self.plot.set_ydata( self.lpf.FFTdb )
         new_y = update_filter(freqband)
@@ -74,9 +73,9 @@ ax.grid(which='both')
 
 
 #bands = [1, 10, 100, 1000, 10000]
-bands = [1000]
+bands = [1,10,100,1000,10000]
 freqband = []
-freq_config = SliderControl( 0.03, 0.2, 0.5, 0.175 )
+freq_config = SliderControl( 0.03, 0.8, 0.1, 0.175 )
 slider_pos_y_inc = 0.035
 
 for cutoff in bands:
