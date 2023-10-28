@@ -37,7 +37,12 @@ class SliderControl:
 
 class FilterControl:
     def freq_changed( self, val ):
-        self.lpf.update_freq(np.power(10,self.fslider.val))
+        new_freq = np.power(10, self.fslider.val)
+        self.lpf.update_freq(new_freq)
+        new_gain = -10 * np.log10(new_freq)
+        new_gain_raw = np.power(10,new_gain/20)
+        print(f'gain: {new_gain} | {new_gain_raw}')
+        self.lpf.update_gain(new_gain)
         self.plot.set_ydata( self.lpf.FFTdb )
         new_y = update_filter(freqband)
         update_graph(new_y)
