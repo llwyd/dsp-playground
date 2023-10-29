@@ -15,6 +15,10 @@ def update_filter(freq):
     y = y * dsp.gain(raw_gain)
     return y
 
+def update_overall_gain(val):
+    y_gain = val
+    print(f'{y_gain}')
+
 def update_graph(y):
     _, Yf, Ydb = dsp.fft( y, fs, sig_len)
     Y_plot.set_ydata( Ydb )
@@ -75,15 +79,22 @@ ax.grid(which='both')
 #bands = [1, 10, 100, 1000, 10000]
 bands = [1,10,100,1000,10000]
 freqband = []
-freq_config = SliderControl( 0.03, 0.8, 0.1, 0.175 )
+freq_config = SliderControl( 0.03, 0.7, 0.2, 0.175 )
 slider_pos_y_inc = 0.035
+
+gain_config = SliderControl(0.2, 0.03, 0.05, 0.035)
+slider_ax = fig.add_axes([gain_config.x, gain_config.y, gain_config.width, gain_config.height], facecolor=axcolor)
+slider = Slider(slider_ax,"Gain", -50, 20, valinit=0,valstep=1,orientation = "vertical" )
+slider.on_changed(update_overall_gain)
 
 for cutoff in bands:
     freqband.append( FilterControl(fig, ax, 1, cutoff, fs, 0, sig_len, freq_config, axcolor) )
     freq_config.y -= slider_pos_y_inc
 
+y_gain = 0
 y = update_filter(freqband)
 Y, Yf, Ydb = dsp.fft( y, fs, sig_len)
+
 
 Y_plot, = ax.semilogx( Yf, Ydb )
 ideal_db, ideal_f = dsp.generate_decade_line( 0, 100000 )
