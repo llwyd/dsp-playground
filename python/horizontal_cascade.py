@@ -89,7 +89,7 @@ slider_pos_y_inc = 0.035
 
 gain_config = SliderControl(0.2, 0.03, 0.05, 0.035)
 slider_ax = fig.add_axes([gain_config.x, gain_config.y, gain_config.width, gain_config.height], facecolor=axcolor)
-slider = Slider(slider_ax,"Gain", -50, 20, valinit=0,valstep=1,orientation = "vertical" )
+slider = Slider(slider_ax,"Gain", -50, 20, valinit=0,valstep=0.1,orientation = "vertical" )
 slider.on_changed(update_overall_gain)
 
 for cutoff in bands:
