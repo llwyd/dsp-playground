@@ -5,6 +5,8 @@ from scipy import signal
 from scipy.io import wavfile
 import dsp
 
+y_gain = 0
+
 def update_filter(freq):
     y = np.zeros(sig_len)
     total_gain = 0
@@ -13,11 +15,14 @@ def update_filter(freq):
         total_gain += dsp.gain( freq[i].lpf.gain )
     raw_gain = -20*np.log10(total_gain)
     y = y * dsp.gain(raw_gain)
+    y = y * dsp.gain(y_gain)
     return y
 
 def update_overall_gain(val):
+    global y_gain
     y_gain = val
-    print(f'{y_gain}')
+    new_y = update_filter(freqband)
+    update_graph(new_y)
 
 def update_graph(y):
     _, Yf, Ydb = dsp.fft( y, fs, sig_len)
@@ -91,7 +96,6 @@ for cutoff in bands:
     freqband.append( FilterControl(fig, ax, 1, cutoff, fs, 0, sig_len, freq_config, axcolor) )
     freq_config.y -= slider_pos_y_inc
 
-y_gain = 0
 y = update_filter(freqband)
 Y, Yf, Ydb = dsp.fft( y, fs, sig_len)
 
