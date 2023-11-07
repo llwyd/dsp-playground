@@ -31,8 +31,8 @@ def update_graph(y):
     cascade_slope = dsp.get_fslope( Yf, Ydb )
     ideal_slope = dsp.get_fslope( ideal_f, ideal_db )
 
-    cascade_slope_text.set_text(f'Filter gradient: {cascade_slope:.3f}')
-    ideal_slope_text.set_text(f' Ideal gradient: {ideal_slope:.3f}')
+    cascade_slope_text.set_text(f'Filter gradient: {cascade_slope:.6f}')
+    ideal_slope_text.set_text(f'Ideal gradient: {ideal_slope:.6f}')
 
 def stringify( val ):
     return str(val) + " Hz "
@@ -116,8 +116,8 @@ ideal, = ax.semilogx(ideal_f, ideal_db )
 cascade_slope = dsp.get_fslope( Yf, Ydb )
 ideal_slope = dsp.get_fslope( ideal_f, ideal_db )
 
-cascade_slope_text =ax.text(1000,0,f'Filter gradient: {cascade_slope:.3f}')
-ideal_slope_text =ax.text(1000,4,f' Ideal gradient: {ideal_slope:.3f}')
+cascade_slope_text =ax.text(100,0,f'Filter gradient: {cascade_slope:.6f}')
+ideal_slope_text =ax.text(100,4,f'Ideal gradient: {ideal_slope:.6f}')
 
 axcolor = 'lightgoldenrodyellow'
 
