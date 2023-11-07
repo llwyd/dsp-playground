@@ -45,6 +45,15 @@ class SliderControl:
         self.y = pos_y
 
 class FilterControl:
+    def update(self):
+        new_freq = np.power(10, self.fslider.val)
+        self.lpf.update_freq(new_freq)
+        new_gain = (-10 * np.log10(new_freq)) + 3
+        new_gain_raw = np.power(10,new_gain/20)
+        self.lpf.update_gain(new_gain)
+        self.plot.set_ydata( self.lpf.FFTdb )
+        new_y = update_filter(freqband)
+        update_graph(new_y)
     def freq_changed( self, val ):
         new_freq = np.power(10, self.fslider.val)
         self.lpf.update_freq(new_freq)
@@ -111,5 +120,8 @@ cascade_slope_text =ax.text(1000,0,f'Filter gradient: {cascade_slope:.3f}')
 ideal_slope_text =ax.text(1000,4,f' Ideal gradient: {ideal_slope:.3f}')
 
 axcolor = 'lightgoldenrodyellow'
+
+for freq in freqband:
+    freq.update()
 
 plt.show()
