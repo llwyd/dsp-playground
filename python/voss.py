@@ -101,11 +101,6 @@ def voss_stoch(num_samples,generators):
     p = generate_p(generators)
     previous_index = generators - 1
 
-    k = np.linspace(0,num_samples - 1, num_samples,dtype=np.uint32)
-    
-    #k = shuffle_in_segments(k, 8)
-    np.random.shuffle(k)
-
     x = np.zeros(num_samples)
     white = 0.0
     white_noise = noise.NoiseGenerator()
@@ -122,16 +117,8 @@ def voss_stoch(num_samples,generators):
     counter = 1
     indices = np.zeros(num_samples)
     for i in range(num_samples):
-        index = generators - 1
-
-        r = random.random()
-        for j in range(len(noise_array)):
-            if r < noise_array[j].p:
-                index = j
-                previous_index = j
-                break
-
-        index = trailing_bits( k[i] )
+        k = random.randint(1, rollover)
+        index = trailing_bits( k )
         indices[i] = index
     
         noise_array[index].noise.Update()
@@ -200,7 +187,7 @@ fs = 48000
 num_samples = 4096 * 8
 num_tests = 250
 generators = 15
-mode = Mode.Float
+mode = Mode.FloatStoch
 
 print(f'Voss-McCartney Pink Noise Generator')
 print(f'    Sample Rate: {fs}') 
