@@ -28,7 +28,7 @@ for i in range(sig_len):
 fft_len = int(np.power(2, np.ceil(np.log2(sig_len))))
 raw_impulse = np.fft.ifft(rect, fft_len)
 
-filt = np.abs(raw_impulse)
+filt = raw_impulse.real
 
 # New filter len
 N = 400
