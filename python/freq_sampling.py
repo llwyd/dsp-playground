@@ -9,12 +9,11 @@ fs = 44100
 
 ideal_mag = np.zeros(sig_len)
 ideal_phase = np.zeros(sig_len)
-f= (fs/2)*np.linspace(0,1,int(sig_len))
+f = (fs/2) * np.linspace(0,1,int(sig_len))
 
 ideal_mag[:] = 1.0
-#ideal_mag = ideal_mag / f
 ideal_mag[1:] = ideal_mag[1:] / f[1:]
-mag = 20*np.log10(ideal_mag)
+mag_db = 20*np.log10(ideal_mag)
 
 
 # Convert to rectangular form
@@ -26,35 +25,41 @@ for i in range(sig_len):
     comp = real + (imag * 1j)
     rect[i] = comp
 
-raw_impulse = np.fft.ifft(rect, 1024)
+fft_len = int(np.power(2, np.ceil(np.log2(sig_len))))
+raw_impulse = np.fft.ifft(rect, fft_len)
 
 filt = np.abs(raw_impulse)
-#filt = raw_impulse.real
 
-
+# New filter len
 N = 400
 # Shift
 filt = np.roll(filt,int(N/2))
 
 # Truncate
 h = filt[:N+1]
-h = dsp.norm(h)
-
 h0 = h
 
 # Window
-w = np.blackman(N+1)
+w = np.blackman(len(h))
 h = h * w
 
-x = np.zeros(1024)
+sig_len = 512
+x = np.zeros(sig_len)
 x[0] = 1.0
 
-y = np.convolve(x, h,mode='same')
+y = np.convolve(x,h)
 
-Y,Yf,Ydb = dsp.fft(y,fs, 1024,norm='ortho')
+fft_len = int(np.power(2, np.ceil(np.log2(len(h)))))
+H,Hf,Hdb = dsp.fft(h,fs,fft_len,norm='ortho')
+H0,H0f,H0db = dsp.fft(h0,fs, fft_len,norm='ortho')
+
+fft_len = int(np.power(2, np.ceil(np.log2(sig_len))))
+Y,Yf,Ydb = dsp.fft(y,fs,fft_len,norm='ortho')
 
 plt.semilogx(Yf,Ydb);
-plt.semilogx(f,mag);
+plt.semilogx(Hf,Hdb);
+plt.semilogx(H0f,H0db);
+plt.semilogx(f,mag_db);
 plt.show()
 
 
