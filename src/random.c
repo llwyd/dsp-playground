@@ -17,16 +17,24 @@ extern void Random_Init(random_t * const rng)
     if(rng->seed == 0U)
     {
         rng->seed = MAGIC_SEED;
+        rng->prev = MAGIC_SEED;
         rng->seed = XORShift(rng->seed);
     }
     else
     {
+        rng->prev = rng->seed;
         rng->seed = XORShift(rng->seed);
     }
 }
 
+extern uint32_t Random_Prev(random_t * const rng)
+{
+    return rng->prev;
+}
+
 extern uint32_t Random_Next(random_t * const rng)
 {
+    rng->prev = rng->seed;
     rng->seed = XORShift(rng->seed);
     return rng->seed;
 }

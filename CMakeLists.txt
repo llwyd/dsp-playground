@@ -16,6 +16,12 @@ set (CMAKE_BUILD_TYPE Debug )
 #                src/audio.c
 #                src/audio.h )
 
+add_executable( pink.out
+                src/pink_playback.c
+                src/pink.c
+                src/pink.h
+                src/random.h
+                src/random.c)
 
 add_executable( audio_sm.out
                 src/audio_sm.c
@@ -24,6 +30,11 @@ add_executable( audio_sm.out
                 src/resonator.c
                 src/resonator.h
                 src/types.h)
+
+target_compile_options( pink.out
+                        PUBLIC
+                        -Wall
+                        -Werror )
 
 target_compile_options( audio_sm.out
                         PUBLIC
@@ -38,3 +49,6 @@ target_compile_options( audio_sm.out
 
 target_link_libraries( audio_sm.out asound)
 target_link_libraries( audio_sm.out m)
+
+target_link_libraries( pink.out asound)
+target_link_libraries( pink.out m)
