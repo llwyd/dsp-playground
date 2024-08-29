@@ -69,13 +69,15 @@ extern audio_state_t Audio_GetState(void)
 }
 
 
-extern snd_pcm_uframes_t Audio_GetMonoBuffer( float32_t ** ptr )
+extern snd_pcm_uframes_t Audio_GetMonoBuffer( audio_t * const driver, uint32_t ** ptr )
 { 
-    assert( handle != NULL );
-    assert( channels == 1U );
+    assert( driver->handle != NULL );
+    assert( driver->channels == 1U );
+    
     snd_pcm_uframes_t frames;
-    ALSA_FUNC(snd_pcm_mmap_begin(handle, &areas, &offset, &frames));
-    *ptr = (float32_t *)areas[0U].addr; /* Initial location */
+    snd_pcm_uframes_t offset;
+    ALSA_FUNC(snd_pcm_mmap_begin(driver->handle, &driver->areas, &offset, &frames));
+    *ptr = (uint32_t *)areas[0U].addr; /* Initial location */
 
     assert( areas[0U].step == 32 );
 
@@ -117,57 +119,39 @@ extern void Audio_CommitSamples( snd_pcm_uframes_t frames )
     ALSA_FUNC (snd_pcm_mmap_commit(handle, offset, frames) );
 }
 
-extern void Audio_Init( uint32_t numChannels )
+extern void Audio_InitMono(audio_t * const driver)
 {
-    assert( numChannels > 0 );
-    assert( numChannels <= 2 );
-    assert( handle == NULL );
+    assert( driver != NULL );
 
-    channels = numChannels;
+    driver->channels = 1U;
     
     signal(SIGINT, StopAudio);
     
-    ALSA_FUNC(snd_pcm_open( &handle,
-                            "plughw:1,0",
+    ALSA_FUNC(snd_pcm_open( &driver->handle,
+                            "default",
                             SND_PCM_STREAM_PLAYBACK,
                             SND_PCM_NONBLOCK));
 
-    ALSA_FUNC(snd_pcm_set_params( handle,
-                        SND_PCM_FORMAT_FLOAT_LE, 	        /* little endian*/
+    ALSA_FUNC(snd_pcm_set_params( driver->handle,
+                        SND_PCM_FORMAT_S32_LE, 	        /* little endian*/
                         SND_PCM_ACCESS_MMAP_NONINTERLEAVED,	/* interleaved */
-                        channels,				            /* channels */
+                        driver->channels,				            /* channels */
                         FS,				                    /* sample rate */
                         0,				                    /* alsa resampling */
                         LATENCY));			                /* desired latency */
     
     assert( Audio_FramesAvailable() );
     snd_pcm_uframes_t frames; 
-    if( channels == 1U )
+
+    uint32_t * buffer;
+    frames = Audio_GetMonoBuffer( driver, &buffer );
+    for( uint32_t idx = 0; idx < frames; idx++ )
     {
-        float32_t * buffer;
-        frames = Audio_GetMonoBuffer( &buffer );
-        for( uint32_t idx = 0; idx < frames; idx++ )
-        {
-            *buffer++ = 0U;
-        }
-    }
-    else if( channels == 2U )
-    {
-        float32_t * left, * right;
-        frames = Audio_GetStereoBuffers(&left, &right );
-        for( uint32_t idx = 0; idx < frames; idx++ )
-        {
-            *left++ = 0U;
-            *right++ = 0U;
-        }
-    }
-    else
-    {
-        assert( false );
+        *buffer++ = 0U;
     }
 
     Audio_CommitSamples(frames);
-    ALSA_FUNC( snd_pcm_start( handle ) );
+    ALSA_FUNC( snd_pcm_start( driver->handle ) );
 }
 
 extern void Audio_Close(void)
