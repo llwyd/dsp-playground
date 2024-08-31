@@ -25,10 +25,12 @@ int main(int argc, char ** argv)
 
     for(uint32_t idx = 0; idx < 48000; idx++)
     {
-        union Audio audio;
-        audio.u32 = Pink_Kick(&pink);
-        audio.u32 = 0x80000000 - audio.u32;
+        //union Audio audio;
+//        audio.u32 = Pink_Kick(&pink);
+//        audio.u32 = 0x80000000 - audio.u32;
 
-        printf("%d\n", audio.s32);
+//        printf("%d\n", audio.s32);
+//
+        printf("%d\n", Pink_KickS32(&pink));
     }
 }

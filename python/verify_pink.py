@@ -31,8 +31,22 @@ x = dsp.norm(x)
 X, Xf, Xdb = dsp.fft(x, 48000, len(x),norm='ortho' )
 Ydb = np.add(Ydb,Xdb)
 
+x = np.loadtxt('../pink5.txt')
+x = dsp.norm(x)
+X, Xf, Xdb = dsp.fft(x, 48000, len(x),norm='ortho' )
+Ydb = np.add(Ydb,Xdb)
 
-Zdb = Ydb / 5
+x = np.loadtxt('../pink6.txt')
+x = dsp.norm(x)
+X, Xf, Xdb = dsp.fft(x, 48000, len(x),norm='ortho' )
+Ydb = np.add(Ydb,Xdb)
+
+x = np.loadtxt('../pink7.txt')
+x = dsp.norm(x)
+X, Xf, Xdb = dsp.fft(x, 48000, len(x),norm='ortho' )
+Ydb = np.add(Ydb,Xdb)
+
+Zdb = Ydb / 8
 
 plt.semilogx(Xf,Zdb)
 plt.show()
