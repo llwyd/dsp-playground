@@ -1,6 +1,6 @@
 #include "pink.h"
 
-_Static_assert(NUM_GENERATORS == 15U);
+_Static_assert(NUM_GENERATORS == 15U, "Num generators must be 15");
 
 #define ROLLOVER (1 << (NUM_GENERATORS - 1))
 #define DIV_SHIFT ( 4U )

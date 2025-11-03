@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 4.0)
 
 project( dsp )
 
@@ -17,13 +17,14 @@ set (CMAKE_BUILD_TYPE Debug )
 #                src/audio.h )
 
 add_executable( pink.out
-                src/pink_playback.c
+                src/pink_test.c
                 src/pink.c
                 src/pink.h
                 src/random.h
                 src/random.c
-                src/audio.c
-                src/audio.h)
+                #src/audio.c
+                #src/audio.h
+                )
 
             #add_executable( audio_sm.out
             #                src/audio_sm.c
@@ -53,5 +54,5 @@ target_compile_options( pink.out
 #target_link_libraries( audio_sm.out asound)
 #target_link_libraries( audio_sm.out m)
 
-target_link_libraries( pink.out asound)
+#target_link_libraries( pink.out asound)
 target_link_libraries( pink.out m)
