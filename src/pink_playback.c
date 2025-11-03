@@ -17,20 +17,25 @@ int main(int argc, char ** argv)
 {
     (void)argc;
     (void)argv;
-    //audio_t audio_driver;
+    audio_t audio_driver;
     
     pink_t pink;
     Pink_Init(&pink);
-//    Audio_InitMono(&audio_driver);
+    Audio_InitMono(&audio_driver);
 
-    for(uint32_t idx = 0; idx < 48000; idx++)
+    for(uint32_t idx = 0; idx < (48000 * 5); idx++)
     {
-        //union Audio audio;
-//        audio.u32 = Pink_Kick(&pink);
-//        audio.u32 = 0x80000000 - audio.u32;
-
-//        printf("%d\n", audio.s32);
-//
-        printf("%d\n", Pink_KickS32(&pink));
+        while(!Audio_FramesAvailable(&audio_driver));
+        int32_t * buffer;
+        snd_pcm_uframes_t frames = Audio_GetMonoBuffer( &audio_driver, &buffer );
+    
+        for( uint32_t jdx = 0; jdx < frames; jdx++, idx++ )
+        {
+            //uint32_t p = 0x80000000 - Pink_Kick(&pink);
+            *buffer++ = Pink_KickS32(&pink);
+        }
+    
+        Audio_CommitSamples(&audio_driver, frames);
     }
+    Audio_Close(&audio_driver);
 }
