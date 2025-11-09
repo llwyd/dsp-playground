@@ -7,7 +7,7 @@ class EQBand():
     def __init__(self,lp_cutoff,hp_cutoff,fs):
         order = 1
         self.fs = fs
-        self.gain = 1.0
+        self.gain = 0.0
         if hp_cutoff == 0.0:
             # low pass only
             self.high = [1,0,0,1,0,0]
@@ -94,8 +94,7 @@ def update():
         h = signal.unit_impulse(sig_len)
         gain = np.power(10, band[i].gain / 20)
         z0 = signal.sosfilt(band[i].low,h) * gain
-        z1 = signal.sosfilt(band[i].high,h) * gain
-        y += z0
+        z1 = signal.sosfilt(band[i].high,z0) * gain
         y += z1
 
     return y
@@ -140,11 +139,11 @@ axfreq_2 = plt.axes([0.2, 0.125, 0.65, 0.03], facecolor=axcolor)
 axfreq_3 = plt.axes([0.2, 0.075, 0.65, 0.03], facecolor=axcolor)
 axfreq_4 = plt.axes([0.2, 0.025, 0.65, 0.03], facecolor=axcolor)
 
-band_0 = Slider(axfreq_0, 'Band 0', -100, 100, valinit=1, valstep=1)
-band_1 = Slider(axfreq_1, 'Band 1', -100, 100, valinit=1, valstep=1)
-band_2 = Slider(axfreq_2, 'Band 2', -100, 100, valinit=1, valstep=1)
-band_3 = Slider(axfreq_3, 'Band 3', -100, 100, valinit=1, valstep=1)
-band_4 = Slider(axfreq_4, 'Band 4', -100, 100, valinit=1, valstep=1)
+band_0 = Slider(axfreq_0, 'Band 0', -100, 100, valinit=0, valstep=0.5)
+band_1 = Slider(axfreq_1, 'Band 1', -100, 100, valinit=0, valstep=0.5)
+band_2 = Slider(axfreq_2, 'Band 2', -100, 100, valinit=0, valstep=0.5)
+band_3 = Slider(axfreq_3, 'Band 3', -100, 100, valinit=0, valstep=0.5)
+band_4 = Slider(axfreq_4, 'Band 4', -100, 100, valinit=0, valstep=0.5)
 
 band_0.on_changed(update_graph)
 band_1.on_changed(update_graph)
