@@ -92,8 +92,9 @@ def update():
     y = 0
     for i in range(0,len(band)):
         h = signal.unit_impulse(sig_len)
-        z0 = signal.sosfilt(band[i].low,h) * band[i].gain
-        z1 = signal.sosfilt(band[i].high,h) * band[i].gain
+        gain = np.power(10, band[i].gain / 20)
+        z0 = signal.sosfilt(band[i].low,h) * gain
+        z1 = signal.sosfilt(band[i].high,h) * gain
         y += z0
         y += z1
 
@@ -139,11 +140,11 @@ axfreq_2 = plt.axes([0.2, 0.125, 0.65, 0.03], facecolor=axcolor)
 axfreq_3 = plt.axes([0.2, 0.075, 0.65, 0.03], facecolor=axcolor)
 axfreq_4 = plt.axes([0.2, 0.025, 0.65, 0.03], facecolor=axcolor)
 
-band_0 = Slider(axfreq_0, 'Band 0', 0.01, 100, valinit=1, valstep=0.5)
-band_1 = Slider(axfreq_1, 'Band 1', 0.01, 100, valinit=1, valstep=0.5)
-band_2 = Slider(axfreq_2, 'Band 2', 0.01, 100, valinit=1, valstep=0.5)
-band_3 = Slider(axfreq_3, 'Band 3', 0.01, 100, valinit=1, valstep=0.5)
-band_4 = Slider(axfreq_4, 'Band 4', 0.01, 100, valinit=1, valstep=0.5)
+band_0 = Slider(axfreq_0, 'Band 0', -100, 100, valinit=1, valstep=1)
+band_1 = Slider(axfreq_1, 'Band 1', -100, 100, valinit=1, valstep=1)
+band_2 = Slider(axfreq_2, 'Band 2', -100, 100, valinit=1, valstep=1)
+band_3 = Slider(axfreq_3, 'Band 3', -100, 100, valinit=1, valstep=1)
+band_4 = Slider(axfreq_4, 'Band 4', -100, 100, valinit=1, valstep=1)
 
 band_0.on_changed(update_graph)
 band_1.on_changed(update_graph)
