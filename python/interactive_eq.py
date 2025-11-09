@@ -9,16 +9,12 @@ class EQBand():
         self.fs = fs
         self.gain = 0.0
         if hp_cutoff == 0.0:
-            # low pass only
-            self.high = [1,0,0,1,0,0]
+            self.filter = signal.butter(order,lp_cutoff,'lowpass',fs=fs,output='sos')
+        elif lp_cutoff == 0.0:
+            self.filter = signal.butter(order,hp_cutoff,'highpass',fs=fs,output='sos')
         else:
-            self.high = signal.butter(1,hp_cutoff,'hp',fs=fs,output='sos')
+            self.filter = signal.butter(order,[lp_cutoff, hp_cutoff],'bandpass',fs=fs,output='sos')
 
-        if lp_cutoff == 0.0:
-            # high pass only
-            self.low = [1,0,0,1,0,0]
-        else:
-            self.low = signal.butter(1,lp_cutoff,'lp',fs=fs,output='sos')
             
 def fft(x,fs,fft_len):
     F = np.fft.fft(x,fft_len,norm='ortho')
@@ -55,7 +51,6 @@ plt.ylabel('Magnitude (dB)')
 
 
 fs = 44100
-band = EQBand(50,1000,fs)
 sig_len = 8192 * 8 
 freqs = calculate_bands(fs)
 
@@ -64,38 +59,30 @@ print(freqs)
 band = []
 b = EQBand(freqs[1],freqs[0],fs)
 band.append(b)
-b = EQBand(freqs[2],freqs[1],fs)
+b = EQBand(freqs[1],freqs[2],fs)
 band.append(b)
-b = EQBand(freqs[3],freqs[2],fs)
+b = EQBand(freqs[2],freqs[3],fs)
 band.append(b)
 b = EQBand(freqs[4],freqs[3],fs)
 band.append(b)
 
 
 h = signal.unit_impulse(sig_len)
-x = signal.sosfilt(band[0].low,h)
-x = signal.sosfilt(band[0].high,x)
-
-x1 = signal.sosfilt(band[1].low,h)
-x1 = signal.sosfilt(band[1].high,x1)
-
-x2 = signal.sosfilt(band[2].low,h)
-x2 = signal.sosfilt(band[2].high,x2)
-
-x3 = signal.sosfilt(band[3].low,h)
-x3 = signal.sosfilt(band[3].high,x3)
+x = signal.sosfilt(band[0].filter,h)
+x1 = signal.sosfilt(band[1].filter,h)
+x2 = signal.sosfilt(band[2].filter,h)
+x3 = signal.sosfilt(band[3].filter,h)
 
 
 h = signal.unit_impulse(sig_len)
 
 def update():
-    y = 0
+    y = 0.0
     for i in range(0,len(band)):
         h = signal.unit_impulse(sig_len)
         gain = np.power(10, band[i].gain / 20)
-        z0 = signal.sosfilt(band[i].low,h) * gain
-        z1 = signal.sosfilt(band[i].high,z0) * gain
-        y += z1
+        z0 = signal.sosfilt(band[i].filter,h) * gain
+        y += z0
 
     return y
 
@@ -115,6 +102,7 @@ l3, = ax.semilogx(X3f,X3db)
 ly, = ax.semilogx(Yf,Ydb)
 
 plt.hlines(-3,0,max(Xf))
+plt.xlim(20,fs/2)
 plt.ylim(-30,5)
 plt.xlabel('Frequency (Hz)')
 plt.ylabel('Magnitude (dB)')
