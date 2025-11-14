@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button, RadioButtons
 from scipy import signal
+import dsp
 
 class EQBand():
     def __init__(self,lp_cutoff,hp_cutoff,fs):
@@ -44,7 +45,7 @@ def calculate_bands(fs):
 
     return cutoff
 
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(8,6))
 plt.subplots_adjust(bottom=0.35)
 plt.xlabel('Frequency (Hz)')
 plt.ylabel('Magnitude (dB)')
@@ -88,6 +89,8 @@ def update():
 
 y = update()
 
+ideal_db, ideal_f = dsp.generate_decade_line( 15, 100000 )
+
 X,Xf,Xdb = fft(x,fs,sig_len)
 X1,X1f,X1db = fft(x1,fs,sig_len)
 X2,X2f,X2db = fft(x2,fs,sig_len)
@@ -100,6 +103,7 @@ l1, = ax.semilogx(X1f,X1db)
 l2, = ax.semilogx(X2f,X2db)
 l3, = ax.semilogx(X3f,X3db)
 ly, = ax.semilogx(Yf,Ydb)
+ideal, = ax.semilogx(ideal_f, ideal_db )
 
 plt.hlines(-3,0,max(Xf))
 plt.xlim(20,fs/2)
