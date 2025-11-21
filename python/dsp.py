@@ -42,6 +42,18 @@ class SinglePoleLPF():
         self.ir = ewma( self.alpha, self.sig_len) * gain( self.gain )
         self.FFT, self.FFTf, self.FFTdb = fft( self.ir, self.fs, self.sig_len )
 
+class EQBand():
+    def __init__(self,lower_cutoff,upper_cutoff,fs):
+        order = 1
+        self.fs = fs
+        self.gain = 0.0
+        if lower_cutoff == 0.0:
+            self.filter = signal.butter(order,upper_cutoff,'lowpass',fs=fs,output='sos')
+        elif upper_cutoff == fs:
+            self.filter = signal.butter(order,lower_cutoff,'highpass',fs=fs,output='sos')
+        else:
+            self.filter = signal.butter(order,[lower_cutoff, upper_cutoff],'bandpass',fs=fs,output='sos')
+
 
 def fft(x,fs,fft_len,norm=None):
     F = np.fft.fft(x,fft_len,norm=norm)
