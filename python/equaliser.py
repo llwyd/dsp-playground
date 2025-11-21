@@ -32,8 +32,9 @@ freqs = calculate_bands(num_bands,fs)
 
 eq_bands = []
 
+order = 1
 for i in range(0,num_bands):
-    eq_bands.append(dsp.EQBand(freqs[i],freqs[i+1],fs))
+    eq_bands.append(dsp.EQBand(freqs[i],freqs[i+1],fs,order))
 
 h = signal.unit_impulse(sig_len)
 f = []
