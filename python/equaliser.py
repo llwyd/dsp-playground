@@ -18,8 +18,9 @@ def calculate_bands(bands, fs):
 num_bands = 5
 fs = 48000
 sig_len = fs 
+order = 1
+axcolor = 'lightgoldenrodyellow'
 fig, ax = plt.subplots(figsize=(8,6))
-
 
 plt.subplots_adjust(bottom=0.35)
 plt.hlines(-3,0,fs/2)
@@ -28,11 +29,12 @@ plt.ylim(-30,5)
 plt.xlabel('Frequency (Hz)')
 plt.ylabel('Magnitude (dB)')
 
+
+ideal_db, ideal_f = dsp.generate_decade_line( 15, 100000 )
+ax.semilogx(ideal_f, ideal_db )
+
 freqs = calculate_bands(num_bands,fs)
-
 eq_bands = []
-
-order = 1
 for i in range(0,num_bands):
     eq_bands.append(dsp.EQBand(freqs[i],freqs[i+1],fs,order))
 
@@ -41,7 +43,14 @@ f = []
 Fdb = []
 Ff = []
 F = []
+axfreq = []
+slider = []
 y = np.zeros(sig_len)
+x_pos = 0.2
+x_inc = 0.05
+y_pos = 0.01
+y_inc = 0.0
+
 for i in range(0, num_bands):
     m = signal.sosfilt(eq_bands[i].filter,h)
     y += m
@@ -50,7 +59,12 @@ for i in range(0, num_bands):
     F.append(M)
     Fdb.append(Mdb)
     Ff.append(Mf)
+    
     ax.semilogx(Mf,Mdb)
+    axfreq.append(plt.axes([x_pos, y_pos, 0.03, 0.25], facecolor=axcolor))
+    slider.append(Slider(axfreq[i], 'Band', -100, 100, valinit=0, valstep=0.5, orientation='vertical'))
+    x_pos += x_inc
+    y_pos += y_inc
 
 Y, Yf,Ydb = dsp.fft(y, fs, sig_len)    
 ax.semilogx(Yf,Ydb)
