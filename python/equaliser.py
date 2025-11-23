@@ -15,7 +15,8 @@ def calculate_bands(bands, fs):
 
     return cutoff
 
-num_bands = 5
+
+num_bands = 8
 fs = 48000
 sig_len = fs 
 order = 1
@@ -39,6 +40,9 @@ for i in range(0,num_bands):
     eq_bands.append(dsp.EQBand(freqs[i],freqs[i+1],fs,order))
 
 h = signal.unit_impulse(sig_len)
+H, Hf, Hdb = dsp.fft(h, fs, sig_len)    
+ly, = ax.semilogx(Hf,Hdb)
+
 f = []
 Fdb = []
 Ff = []
@@ -50,6 +54,26 @@ x_pos = 0.2
 x_inc = 0.05
 y_pos = 0.01
 y_inc = 0.0
+
+def update():
+    z = np.zeros(sig_len)
+    
+    for i in range(0, num_bands):
+        h = signal.unit_impulse(sig_len)
+        gain = np.power(10, eq_bands[i].gain / 20)
+        w = signal.sosfilt(eq_bands[i].filter, h) * gain
+        z += w
+
+    return z
+
+def update_graph(val):
+    for i in range(0, num_bands):
+        eq_bands[i].gain = slider[i].val
+
+    y = update()
+    Y,Yf,Ydb = dsp.fft(y,fs,sig_len)
+    
+    ly.set_ydata(Ydb)
 
 for i in range(0, num_bands):
     m = signal.sosfilt(eq_bands[i].filter,h)
@@ -63,11 +87,12 @@ for i in range(0, num_bands):
     ax.semilogx(Mf,Mdb)
     axfreq.append(plt.axes([x_pos, y_pos, 0.03, 0.25], facecolor=axcolor))
     slider.append(Slider(axfreq[i], 'Band', -100, 100, valinit=0, valstep=0.5, orientation='vertical'))
+    slider[i].on_changed(update_graph)
     x_pos += x_inc
     y_pos += y_inc
 
 Y, Yf,Ydb = dsp.fft(y, fs, sig_len)    
-ax.semilogx(Yf,Ydb)
+ly.set_ydata(Ydb)
 
 plt.show()
 
