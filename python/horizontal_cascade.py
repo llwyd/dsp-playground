@@ -28,11 +28,17 @@ def update_graph(y):
     _, Yf, Ydb = dsp.fft( y, fs, sig_len)
     Y_plot.set_ydata( Ydb )
 
+    hearing_range = [20, 20000]
+    l_hr = int((hearing_range[0] / (fs / 2)) * len(Yf))
+    u_hr = int((hearing_range[1] / (fs / 2)) * len(Yf))
+
+    hr_slope = dsp.get_fslope( Yf[l_hr:u_hr], Ydb[l_hr:u_hr] )
     cascade_slope = dsp.get_fslope( Yf, Ydb )
     ideal_slope = dsp.get_fslope( ideal_f, ideal_db )
 
     cascade_slope_text.set_text(f'Filter gradient: {cascade_slope:.6f}')
     ideal_slope_text.set_text(f'Ideal gradient: {ideal_slope:.6f}')
+    hearing_range_text.set_text(f'HR gradient: {hr_slope:.6f}')
 
 def stringify( val ):
     return str(val) + " Hz "
@@ -71,12 +77,10 @@ class FilterControl:
         self.fslider = Slider(self.fslider_ax,stringify(fc), np.log10(1), np.log10(fs/2), valinit=np.log10(fc),valstep=0.001,orientation = "horizontal" )
         self.fslider.on_changed(self.freq_changed)
 
-fs = 44100
-num_filters = 4
+fs = 48000
 num_decades = int(np.ceil(np.log10(fs/2)))
 print(f'Decades: {num_decades}')
 print(f'     FS: {fs} Hz')
-print(f'Filters: {num_filters}')
 sig_len = fs
 
 axcolor = 'lightgoldenrodyellow'
@@ -87,8 +91,6 @@ ax.set_ylabel('Magnitude (dB)')
 ax.set_xlim([1,fs/2])
 ax.set_ylim([-50,5])
 ax.grid(which='both')
-
-
 
 #bands = [1, 10, 100, 1000, 10000]
 bands = [1,10,100,1000,10000]
@@ -113,11 +115,17 @@ Y_plot, = ax.semilogx( Yf, Ydb )
 ideal_db, ideal_f = dsp.generate_decade_line( 0, 100000 )
 ideal, = ax.semilogx(ideal_f, ideal_db )
 
+hearing_range = [20, 20000]
+l_hr = int((hearing_range[0] / (fs / 2)) * len(Yf))
+u_hr = int((hearing_range[1] / (fs / 2)) * len(Yf))
+
+hr_slope = dsp.get_fslope( Yf[l_hr:u_hr], Ydb[l_hr:u_hr] )
 cascade_slope = dsp.get_fslope( Yf, Ydb )
 ideal_slope = dsp.get_fslope( ideal_f, ideal_db )
 
 cascade_slope_text =ax.text(100,0,f'Filter gradient: {cascade_slope:.6f}')
 ideal_slope_text =ax.text(100,4,f'Ideal gradient: {ideal_slope:.6f}')
+hearing_range_text =ax.text(100,8,f'HR gradient: {hr_slope:.6f}')
 
 axcolor = 'lightgoldenrodyellow'
 
