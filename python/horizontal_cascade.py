@@ -84,7 +84,7 @@ print(f'     FS: {fs} Hz')
 sig_len = fs
 
 axcolor = 'lightgoldenrodyellow'
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(8,6))
 fig.subplots_adjust(bottom=0.35)
 ax.set_xlabel('Frequency (Hz)')
 ax.set_ylabel('Magnitude (dB)')
