@@ -57,7 +57,7 @@ class FilterControl:
         new_gain = (-10 * np.log10(new_freq)) + 3
         new_gain_raw = np.power(10,new_gain/20)
         self.lpf.update_gain(new_gain)
-        self.plot.set_ydata( self.lpf.FFTdb )
+        #self.plot.set_ydata( self.lpf.FFTdb )
         new_y = update_filter(freqband)
         update_graph(new_y)
     def freq_changed( self, val ):
@@ -66,15 +66,15 @@ class FilterControl:
         new_gain = (-10 * np.log10(new_freq)) + 3
         new_gain_raw = np.power(10,new_gain/20)
         self.lpf.update_gain(new_gain)
-        self.plot.set_ydata( self.lpf.FFTdb )
+        #self.plot.set_ydata( self.lpf.FFTdb )
         new_y = update_filter(freqband)
         update_graph(new_y)
     def __init__( self, fig, ax, filter_order, fc, fs, gain, samples, fslider_config, axcolor ):
         self.lpf = dsp.SinglePoleLPF( filter_order, fc, gain, fs, samples )
-        self.plot,  = ax.semilogx( self.lpf.FFTf, self.lpf.FFTdb )
+        #self.plot,  = ax.semilogx( self.lpf.FFTf, self.lpf.FFTdb )
 
         self.fslider_ax = fig.add_axes([fslider_config.x, fslider_config.y, fslider_config.width, fslider_config.height], facecolor=axcolor)
-        self.fslider = Slider(self.fslider_ax,stringify(fc), np.log10(1), np.log10(fs/2), valinit=np.log10(fc),valstep=0.001,orientation = "horizontal" )
+        self.fslider = Slider(self.fslider_ax,stringify(fc), np.log10(0.01), np.log10(fs/2), valinit=np.log10(fc),valstep=0.001,orientation = "horizontal" )
         self.fslider.on_changed(self.freq_changed)
 
 fs = 48000
