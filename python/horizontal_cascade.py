@@ -93,9 +93,9 @@ ax.set_ylim([-50,5])
 ax.grid(which='both')
 
 #bands = [1, 10, 100, 1000, 10000]
-bands = [1,10,100,1000,10000]
+bands = [1,10,100,100,1000,10000,11000,15000]
 freqband = []
-freq_config = SliderControl( 0.03, 0.7, 0.2, 0.175 )
+freq_config = SliderControl( 0.02, 0.7, 0.2, 0.255 )
 slider_pos_y_inc = 0.035
 
 gain_config = SliderControl(0.2, 0.03, 0.05, 0.035)
