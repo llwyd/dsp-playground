@@ -4,8 +4,13 @@ from matplotlib.widgets import Slider, Button, RadioButtons
 from scipy import signal
 from scipy.io import wavfile
 import dsp
+from enum import Enum
 
 y_gain = 0
+
+class FilterType(Enum):
+    LPF = "LPF"
+    HPF = "HPF"
 
 def update_filter(freq):
     y = np.zeros(sig_len)
@@ -54,25 +59,31 @@ class FilterControl:
     def update(self):
         new_freq = np.power(10, self.fslider.val)
         self.lpf.update_freq(new_freq)
-        new_gain = (-10 * np.log10(new_freq)) + 3
-        new_gain_raw = np.power(10,new_gain/20)
-        self.lpf.update_gain(new_gain)
+        if self.type == FilterType.LPF:
+            new_gain = (-10 * np.log10(new_freq)) + 3
+            new_gain_raw = np.power(10,new_gain/20)
+            self.lpf.update_gain(new_gain)
         #self.plot.set_ydata( self.lpf.FFTdb )
         new_y = update_filter(freqband)
         update_graph(new_y)
     def freq_changed( self, val ):
         new_freq = np.power(10, self.fslider.val)
         self.lpf.update_freq(new_freq)
-        new_gain = (-10 * np.log10(new_freq)) + 3
-        new_gain_raw = np.power(10,new_gain/20)
-        self.lpf.update_gain(new_gain)
+        if self.type == FilterType.LPF:
+            new_gain = (-10 * np.log10(new_freq)) + 3
+            new_gain_raw = np.power(10,new_gain/20)
+            self.lpf.update_gain(new_gain)
         #self.plot.set_ydata( self.lpf.FFTdb )
         new_y = update_filter(freqband)
         update_graph(new_y)
-    def __init__( self, fig, ax, filter_order, fc, fs, gain, samples, fslider_config, axcolor ):
-        self.lpf = dsp.SinglePoleLPF( filter_order, fc, gain, fs, samples )
-        #self.plot,  = ax.semilogx( self.lpf.FFTf, self.lpf.FFTdb )
-
+    def __init__( self, fig, ax, filter_type, filter_order, fc, fs, gain, samples, fslider_config, axcolor ):
+        self.type = filter_type
+        if filter_type == FilterType.LPF:
+            self.lpf = dsp.SinglePoleLPF( filter_order, fc, gain, fs, samples )
+        elif filter_type == FilterType.HPF:
+            self.lpf = dsp.SinglePoleHPF( filter_order, fc, gain, fs, samples )
+        else:
+            assert False
         self.fslider_ax = fig.add_axes([fslider_config.x, fslider_config.y, fslider_config.width, fslider_config.height], facecolor=axcolor)
         self.fslider = Slider(self.fslider_ax,stringify(fc), np.log10(0.01), np.log10(fs/2), valinit=np.log10(fc),valstep=0.001,orientation = "horizontal" )
         self.fslider.on_changed(self.freq_changed)
@@ -103,9 +114,15 @@ slider_ax = fig.add_axes([gain_config.x, gain_config.y, gain_config.width, gain_
 slider = Slider(slider_ax,"Gain", -50, 20, valinit=0,valstep=0.1,orientation = "vertical" )
 slider.on_changed(update_overall_gain)
 
-for cutoff in bands:
-    freqband.append( FilterControl(fig, ax, 1, cutoff, fs, 0, sig_len, freq_config, axcolor) )
+
+for i in range(len(bands) - 1):
+    cutoff = bands[i]
+    freqband.append( FilterControl(fig, ax, FilterType.LPF, 1, cutoff, fs, 0, sig_len, freq_config, axcolor) )
     freq_config.y -= slider_pos_y_inc
+
+cutoff = bands[-1]
+freqband.append( FilterControl(fig, ax, FilterType.HPF, 1, cutoff, fs, 0, sig_len, freq_config, axcolor) )
+freq_config.y -= slider_pos_y_inc
 
 y = update_filter(freqband)
 Y, Yf, Ydb = dsp.fft( y, fs, sig_len)
