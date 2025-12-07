@@ -115,14 +115,9 @@ slider = Slider(slider_ax,"Gain", -50, 20, valinit=0,valstep=0.1,orientation = "
 slider.on_changed(update_overall_gain)
 
 
-for i in range(len(bands) - 1):
-    cutoff = bands[i]
+for cutoff in bands:
     freqband.append( FilterControl(fig, ax, FilterType.LPF, 1, cutoff, fs, 0, sig_len, freq_config, axcolor) )
     freq_config.y -= slider_pos_y_inc
-
-cutoff = bands[-1]
-freqband.append( FilterControl(fig, ax, FilterType.HPF, 1, cutoff, fs, 0, sig_len, freq_config, axcolor) )
-freq_config.y -= slider_pos_y_inc
 
 y = update_filter(freqband)
 Y, Yf, Ydb = dsp.fft( y, fs, sig_len)
