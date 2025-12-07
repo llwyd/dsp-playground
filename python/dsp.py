@@ -84,10 +84,29 @@ class EQBand():
         self.gain = 0.0
         if lower_cutoff == 0.0:
             self.filter = signal.butter(self.order,upper_cutoff,'lowpass',fs=fs,output='sos')
-        elif upper_cutoff == fs:
+        elif upper_cutoff == fs / 2:
             self.filter = signal.butter(self.order,lower_cutoff,'highpass',fs=fs,output='sos')
         else:
             self.filter = signal.butter(self.order,[lower_cutoff, upper_cutoff],'bandpass',fs=fs,output='sos')
+
+class EQButterBand():
+    def __init__(self,lower_cutoff, upper_cutoff,fs,order):
+        self.order = order
+        self.fs = fs
+        self.gain = 0.0
+        
+        if lower_cutoff == 0.0:
+            self.lpf = signal.butter(self.order,upper_cutoff,'lowpass',fs=fs,output='sos')
+            self.hpf = [1, 0, 0, 1, 0 , 0]
+        elif int(np.round(upper_cutoff)) == int(int(fs)/2):
+            self.lpf = [1, 0, 0, 1, 0, 0]
+            self.hpf = signal.butter(self.order,lower_cutoff,'highpass',fs=fs,output='sos')
+        else:
+            self.lpf = signal.butter(self.order,upper_cutoff,'lowpass',fs=fs,output='sos')
+            self.hpf = signal.butter(self.order,lower_cutoff,'highpass',fs=fs,output='sos')
+            self.gain = -6.0
+        
+        print(f'EQBand: {lower_cutoff} <-> {upper_cutoff} g: {self.gain} fs:{self.fs}')
 
 
 def fft(x,fs,fft_len,norm=None):
