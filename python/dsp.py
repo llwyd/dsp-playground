@@ -42,6 +42,41 @@ class SinglePoleLPF():
         self.ir = ewma( self.alpha, self.sig_len) * gain( self.gain )
         self.FFT, self.FFTf, self.FFTdb = fft( self.ir, self.fs, self.sig_len )
 
+class SinglePoleHPF():
+    def __init__( self, order, cutoff, raw_gain, fs, sig_len ):
+        self.fs = fs
+        self.cutoff = cutoff
+        self.alpha = get_alpha( self.cutoff, self.fs )
+        self.order = order
+        self.gain = raw_gain
+        self.sig_len = sig_len
+
+        self.ir = self.kernel() * gain( self.gain )
+        self.FFT, self.FFTf, self.FFTdb = fft( self.ir, self.fs, self.sig_len )
+
+    def update_freq( self, cutoff ):
+        self.cutoff = cutoff
+        self.alpha = get_alpha( self.cutoff, self.fs )
+        
+        self.ir = self.kernel() * gain( self.gain )
+        self.FFT, self.FFTf, self.FFTdb = fft( self.ir, self.fs, self.sig_len )
+
+    def update_gain( self, raw_gain ):
+        self.gain = raw_gain
+        self.ir = self.kernel() * gain( self.gain )
+        self.FFT, self.FFTf, self.FFTdb = fft( self.ir, self.fs, self.sig_len )
+        
+    def kernel(self):
+        a_0 = (1 + self.alpha) / 2
+        a_1 = -(1 + self.alpha) / 2
+        b_1 = self.alpha
+    
+        dirac = signal.unit_impulse( self.sig_len )
+        y = np.zeros( self.sig_len )
+        for i in range( self.sig_len ):
+            y[i] = (dirac[i] * a_0) + (dirac[i-1] * a_1) + (b_1 * y[i-1])
+        return y
+
 class EQBand():
     def __init__(self,lower_cutoff,upper_cutoff,fs,order):
         self.order = order
