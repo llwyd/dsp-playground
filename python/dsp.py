@@ -104,7 +104,6 @@ class EQButterBand():
         else:
             self.lpf = signal.butter(self.order,upper_cutoff,'lowpass',fs=fs,output='sos')
             self.hpf = signal.butter(self.order,lower_cutoff,'highpass',fs=fs,output='sos')
-            self.gain = -6.0
         
         print(f'EQBand: {lower_cutoff} <-> {upper_cutoff} g: {self.gain} fs:{self.fs}')
 
