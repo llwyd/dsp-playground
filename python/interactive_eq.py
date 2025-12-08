@@ -1,0 +1,147 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider, Button, RadioButtons
+from scipy import signal
+import dsp
+
+class EQBand():
+    def __init__(self,lp_cutoff,hp_cutoff,fs):
+        order = 1
+        self.fs = fs
+        self.gain = 0.0
+        if hp_cutoff == 0.0:
+            self.filter = signal.butter(order,lp_cutoff,'lowpass',fs=fs,output='sos')
+        elif lp_cutoff == 0.0:
+            self.filter = signal.butter(order,hp_cutoff,'highpass',fs=fs,output='sos')
+        else:
+            self.filter = signal.butter(order,[lp_cutoff, hp_cutoff],'bandpass',fs=fs,output='sos')
+
+            
+def fft(x,fs,fft_len):
+    F = np.fft.fft(x,fft_len,norm='ortho')
+    F = np.abs(F)
+    F = norm(F)
+    Ff = (fs/2)*np.linspace(0,1,int(fft_len/2))
+    Fdb = 20*np.log10(F[:int(len(F)/2)]);
+    
+    return F, Ff, Fdb
+
+def norm( n ):
+    return n/np.max(np.abs(n))
+
+def calculate_bands(fs):
+    bands = 5
+    step = (np.log(fs/2) - np.log(20)) / (bands-1)
+    cutoff = np.zeros(bands-1)
+    cutoff[0] = np.exp(step)*20
+
+    for i in range(1,bands-1):
+        cutoff[i] = np.exp(step) * cutoff[i-1]
+
+    cutoff[-1] = 0
+    #cutoff[-1] = np.floor(cutoff[-1]) 
+
+    cutoff = np.pad(cutoff,(1,1),'constant',constant_values=0) 
+
+    return cutoff
+
+fig, ax = plt.subplots(figsize=(8,6))
+plt.subplots_adjust(bottom=0.35)
+plt.xlabel('Frequency (Hz)')
+plt.ylabel('Magnitude (dB)')
+
+
+fs = 44100
+sig_len = 8192 * 8 
+freqs = calculate_bands(fs)
+
+print(freqs)
+
+band = []
+b = EQBand(freqs[1],freqs[0],fs)
+band.append(b)
+b = EQBand(freqs[1],freqs[2],fs)
+band.append(b)
+b = EQBand(freqs[2],freqs[3],fs)
+band.append(b)
+b = EQBand(freqs[4],freqs[3],fs)
+band.append(b)
+
+
+h = signal.unit_impulse(sig_len)
+x = signal.sosfilt(band[0].filter,h)
+x1 = signal.sosfilt(band[1].filter,h)
+x2 = signal.sosfilt(band[2].filter,h)
+x3 = signal.sosfilt(band[3].filter,h)
+
+
+h = signal.unit_impulse(sig_len)
+
+def update():
+    y = 0.0
+    for i in range(0,len(band)):
+        h = signal.unit_impulse(sig_len)
+        gain = np.power(10, band[i].gain / 20)
+        z0 = signal.sosfilt(band[i].filter,h) * gain
+        y += z0
+
+    return y
+
+y = update()
+
+ideal_db, ideal_f = dsp.generate_decade_line( 15, 100000 )
+
+X,Xf,Xdb = fft(x,fs,sig_len)
+X1,X1f,X1db = fft(x1,fs,sig_len)
+X2,X2f,X2db = fft(x2,fs,sig_len)
+X3,X3f,X3db = fft(x3,fs,sig_len)
+
+Y,Yf,Ydb = fft(y,fs,sig_len)
+
+l,  = ax.semilogx(Xf,Xdb)
+l1, = ax.semilogx(X1f,X1db)
+l2, = ax.semilogx(X2f,X2db)
+l3, = ax.semilogx(X3f,X3db)
+ly, = ax.semilogx(Yf,Ydb)
+ideal, = ax.semilogx(ideal_f, ideal_db )
+
+plt.hlines(-3,0,max(Xf))
+plt.xlim(20,fs/2)
+plt.ylim(-30,5)
+plt.xlabel('Frequency (Hz)')
+plt.ylabel('Magnitude (dB)')
+
+def update_graph(val):
+    print(band_0.val)
+    band[0].gain = band_0.val
+    band[1].gain = band_1.val
+    band[2].gain = band_2.val
+    band[3].gain = band_3.val
+    #band[4].gain = band_4.val
+    
+    y = update() 
+    Y,Yf,Ydb = fft(y,fs,sig_len)
+    
+    ly.set_ydata(Ydb)
+
+axcolor = 'lightgoldenrodyellow'
+axfreq_0 = plt.axes([0.2, 0.225, 0.65, 0.03], facecolor=axcolor)
+axfreq_1 = plt.axes([0.2, 0.175, 0.65, 0.03], facecolor=axcolor)
+axfreq_2 = plt.axes([0.2, 0.125, 0.65, 0.03], facecolor=axcolor)
+axfreq_3 = plt.axes([0.2, 0.075, 0.65, 0.03], facecolor=axcolor)
+axfreq_4 = plt.axes([0.2, 0.025, 0.65, 0.03], facecolor=axcolor)
+
+band_0 = Slider(axfreq_0, 'Band 0', -100, 100, valinit=0, valstep=0.5)
+band_1 = Slider(axfreq_1, 'Band 1', -100, 100, valinit=0, valstep=0.5)
+band_2 = Slider(axfreq_2, 'Band 2', -100, 100, valinit=0, valstep=0.5)
+band_3 = Slider(axfreq_3, 'Band 3', -100, 100, valinit=0, valstep=0.5)
+band_4 = Slider(axfreq_4, 'Band 4', -100, 100, valinit=0, valstep=0.5)
+
+band_0.on_changed(update_graph)
+band_1.on_changed(update_graph)
+band_2.on_changed(update_graph)
+band_3.on_changed(update_graph)
+band_4.on_changed(update_graph)
+
+plt.show()
+

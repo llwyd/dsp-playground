@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 4.0)
 
 project( dsp )
 
@@ -16,19 +16,34 @@ set (CMAKE_BUILD_TYPE Debug )
 #                src/audio.c
 #                src/audio.h )
 
+add_executable( pink.out
+                src/pink_test.c
+                src/pink.c
+                src/pink.h
+                src/random.h
+                src/random.c
+                #src/audio.c
+                #src/audio.h
+                )
 
-add_executable( audio_sm.out
-                src/audio_sm.c
-                src/audio.c
-                src/audio.h 
-                src/resonator.c
-                src/resonator.h
-                src/types.h)
+            #add_executable( audio_sm.out
+            #                src/audio_sm.c
+            #   src/audio.c
+            #   src/audio.h 
+            #   src/resonator.c
+            #   src/resonator.h
+            #   src/types.h)
 
-target_compile_options( audio_sm.out
+target_compile_options( pink.out
                         PUBLIC
                         -Wall
-                        -Werror )
+                        -Werror
+                        -Wfatal-errors)
+
+                    #target_compile_options( audio_sm.out
+                    #   PUBLIC
+                    #    -Wall
+                    #    -Werror )
 
 #target_link_libraries( playback.out asound)
 #target_link_libraries( playback.out m)
@@ -36,5 +51,8 @@ target_compile_options( audio_sm.out
 #target_link_libraries( stereo_playback.out asound)
 #target_link_libraries( stereo_playback.out m)
 
-target_link_libraries( audio_sm.out asound)
-target_link_libraries( audio_sm.out m)
+#target_link_libraries( audio_sm.out asound)
+#target_link_libraries( audio_sm.out m)
+
+#target_link_libraries( pink.out asound)
+target_link_libraries( pink.out m)

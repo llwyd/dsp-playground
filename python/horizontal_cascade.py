@@ -4,8 +4,13 @@ from matplotlib.widgets import Slider, Button, RadioButtons
 from scipy import signal
 from scipy.io import wavfile
 import dsp
+from enum import Enum
 
 y_gain = 0
+
+class FilterType(Enum):
+    LPF = "LPF"
+    HPF = "HPF"
 
 def update_filter(freq):
     y = np.zeros(sig_len)
@@ -28,11 +33,17 @@ def update_graph(y):
     _, Yf, Ydb = dsp.fft( y, fs, sig_len)
     Y_plot.set_ydata( Ydb )
 
+    hearing_range = [20, 20000]
+    l_hr = int((hearing_range[0] / (fs / 2)) * len(Yf))
+    u_hr = int((hearing_range[1] / (fs / 2)) * len(Yf))
+
+    hr_slope = dsp.get_fslope( Yf[l_hr:u_hr], Ydb[l_hr:u_hr] )
     cascade_slope = dsp.get_fslope( Yf, Ydb )
     ideal_slope = dsp.get_fslope( ideal_f, ideal_db )
 
     cascade_slope_text.set_text(f'Filter gradient: {cascade_slope:.6f}')
     ideal_slope_text.set_text(f'Ideal gradient: {ideal_slope:.6f}')
+    hearing_range_text.set_text(f'HR gradient: {hr_slope:.6f}')
 
 def stringify( val ):
     return str(val) + " Hz "
@@ -48,39 +59,43 @@ class FilterControl:
     def update(self):
         new_freq = np.power(10, self.fslider.val)
         self.lpf.update_freq(new_freq)
-        new_gain = (-10 * np.log10(new_freq)) + 3
-        new_gain_raw = np.power(10,new_gain/20)
-        self.lpf.update_gain(new_gain)
-        self.plot.set_ydata( self.lpf.FFTdb )
+        if self.type == FilterType.LPF:
+            new_gain = (-10 * np.log10(new_freq)) + 3
+            new_gain_raw = np.power(10,new_gain/20)
+            self.lpf.update_gain(new_gain)
+        #self.plot.set_ydata( self.lpf.FFTdb )
         new_y = update_filter(freqband)
         update_graph(new_y)
     def freq_changed( self, val ):
         new_freq = np.power(10, self.fslider.val)
         self.lpf.update_freq(new_freq)
-        new_gain = (-10 * np.log10(new_freq)) + 3
-        new_gain_raw = np.power(10,new_gain/20)
-        self.lpf.update_gain(new_gain)
-        self.plot.set_ydata( self.lpf.FFTdb )
+        if self.type == FilterType.LPF:
+            new_gain = (-10 * np.log10(new_freq)) + 3
+            new_gain_raw = np.power(10,new_gain/20)
+            self.lpf.update_gain(new_gain)
+        #self.plot.set_ydata( self.lpf.FFTdb )
         new_y = update_filter(freqband)
         update_graph(new_y)
-    def __init__( self, fig, ax, filter_order, fc, fs, gain, samples, fslider_config, axcolor ):
-        self.lpf = dsp.SinglePoleLPF( filter_order, fc, gain, fs, samples )
-        self.plot,  = ax.semilogx( self.lpf.FFTf, self.lpf.FFTdb )
-
+    def __init__( self, fig, ax, filter_type, filter_order, fc, fs, gain, samples, fslider_config, axcolor ):
+        self.type = filter_type
+        if filter_type == FilterType.LPF:
+            self.lpf = dsp.SinglePoleLPF( filter_order, fc, gain, fs, samples )
+        elif filter_type == FilterType.HPF:
+            self.lpf = dsp.SinglePoleHPF( filter_order, fc, gain, fs, samples )
+        else:
+            assert False
         self.fslider_ax = fig.add_axes([fslider_config.x, fslider_config.y, fslider_config.width, fslider_config.height], facecolor=axcolor)
-        self.fslider = Slider(self.fslider_ax,stringify(fc), np.log10(1), np.log10(fs/2), valinit=np.log10(fc),valstep=0.001,orientation = "horizontal" )
+        self.fslider = Slider(self.fslider_ax,stringify(fc), np.log10(0.01), np.log10(fs/2), valinit=np.log10(fc),valstep=0.001,orientation = "horizontal" )
         self.fslider.on_changed(self.freq_changed)
 
-fs = 44100
-num_filters = 4
+fs = 48000
 num_decades = int(np.ceil(np.log10(fs/2)))
 print(f'Decades: {num_decades}')
 print(f'     FS: {fs} Hz')
-print(f'Filters: {num_filters}')
 sig_len = fs
 
 axcolor = 'lightgoldenrodyellow'
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(8,6))
 fig.subplots_adjust(bottom=0.35)
 ax.set_xlabel('Frequency (Hz)')
 ax.set_ylabel('Magnitude (dB)')
@@ -88,12 +103,10 @@ ax.set_xlim([1,fs/2])
 ax.set_ylim([-50,5])
 ax.grid(which='both')
 
-
-
 #bands = [1, 10, 100, 1000, 10000]
-bands = [1,10,100,1000,10000]
+bands = [1,10,100,100,1000,10000,11000,15000]
 freqband = []
-freq_config = SliderControl( 0.03, 0.7, 0.2, 0.175 )
+freq_config = SliderControl( 0.02, 0.7, 0.2, 0.255 )
 slider_pos_y_inc = 0.035
 
 gain_config = SliderControl(0.2, 0.03, 0.05, 0.035)
@@ -101,8 +114,9 @@ slider_ax = fig.add_axes([gain_config.x, gain_config.y, gain_config.width, gain_
 slider = Slider(slider_ax,"Gain", -50, 20, valinit=0,valstep=0.1,orientation = "vertical" )
 slider.on_changed(update_overall_gain)
 
+
 for cutoff in bands:
-    freqband.append( FilterControl(fig, ax, 1, cutoff, fs, 0, sig_len, freq_config, axcolor) )
+    freqband.append( FilterControl(fig, ax, FilterType.LPF, 1, cutoff, fs, 0, sig_len, freq_config, axcolor) )
     freq_config.y -= slider_pos_y_inc
 
 y = update_filter(freqband)
@@ -113,11 +127,17 @@ Y_plot, = ax.semilogx( Yf, Ydb )
 ideal_db, ideal_f = dsp.generate_decade_line( 0, 100000 )
 ideal, = ax.semilogx(ideal_f, ideal_db )
 
+hearing_range = [20, 20000]
+l_hr = int((hearing_range[0] / (fs / 2)) * len(Yf))
+u_hr = int((hearing_range[1] / (fs / 2)) * len(Yf))
+
+hr_slope = dsp.get_fslope( Yf[l_hr:u_hr], Ydb[l_hr:u_hr] )
 cascade_slope = dsp.get_fslope( Yf, Ydb )
 ideal_slope = dsp.get_fslope( ideal_f, ideal_db )
 
 cascade_slope_text =ax.text(100,0,f'Filter gradient: {cascade_slope:.6f}')
 ideal_slope_text =ax.text(100,4,f'Ideal gradient: {ideal_slope:.6f}')
+hearing_range_text =ax.text(100,8,f'HR gradient: {hr_slope:.6f}')
 
 axcolor = 'lightgoldenrodyellow'
 
