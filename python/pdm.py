@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
+from scipy import signal
+import dsp
 
 siglen_s = 0.1 # seconds of audio
 fs = 48000
@@ -38,6 +39,18 @@ for i in range(siglen):
         output = dac_1_bit[comparator]
         k += 1
 
+cutoff = fs / 2
+lpf = signal.butter(1, cutoff, 'lowpass',fs=pdm_fs,output = 'sos')
+
+# LPF + decimate
+z = signal.sosfilt(lpf,pdm)
+z = z[::fs_ratio]
+
+plt.figure(1)
+plt.subplot(2,1,1)
 plt.plot(x_t,(x + 1) / 2)
 plt.step(pdm_t,pdm)
+plt.subplot(2,1,2)
+plt.plot(x_t,(x + 1) / 2)
+plt.plot(x_t,z)
 plt.show()
