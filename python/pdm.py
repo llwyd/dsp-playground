@@ -18,6 +18,13 @@ pdm_siglen = int(pdm_fs * siglen_s)
 pdm = np.zeros(pdm_siglen)
 pdm_t = np.linspace(0, siglen_s,pdm_siglen)
 
+pdm_clk_siglen = int(pdm_fs * 2 * siglen_s)
+pdm_clk = np.zeros(pdm_clk_siglen)
+pdm_clk[0:2] = v_ref
+pdm_clk[3::2] = v_ref
+pdm_clk_t = np.linspace(0, siglen_s,pdm_clk_siglen)
+
+
 fs_ratio = int(pdm_fs / fs)
 
 y = np.zeros(siglen)
@@ -65,4 +72,15 @@ plt.legend(['PDM','Analogue signal'])
 plt.title('PDM encoding of 1kHz tone')
 plt.xlabel('Time (s)')
 plt.ylabel('Voltage (V)')
+plt.figure(3)
+
+#plt.xlim(0,0.000005)
+plt.step(pdm_t,pdm)
+plt.step(pdm_clk_t,pdm_clk - 1.85)
+plt.xlim(8.8188e-5,9.6e-5)
+plt.legend(['Data','Clk'])
+plt.title('PDM')
+#plt.xlabel('Time (s)')
+#plt.ylabel('Voltage (V)')
+plt.tick_params(axis='both',which='both',bottom=False,top=False,left=False,labelbottom=False,labelleft=False)
 plt.show()
