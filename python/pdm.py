@@ -7,24 +7,36 @@ siglen_s = 0.1 # seconds of audio
 fs = 48000
 siglen = int(siglen_s * fs)
 
-f = 100
+v_ref = 1.65
+f = 1000
 t = np.linspace(0,siglen - 1, siglen)
 x_t = np.linspace(0,siglen_s, siglen)
-x = np.sin(2 * np.pi * f * t/fs)
+x = np.sin(2 * np.pi * f * t/fs) * v_ref
 
 pdm_fs = 3072000
 pdm_siglen = int(pdm_fs * siglen_s)
 pdm = np.zeros(pdm_siglen)
 pdm_t = np.linspace(0, siglen_s,pdm_siglen)
 
+pdm_clk_siglen = int(pdm_fs * 2 * siglen_s)
+pdm_clk = np.zeros(pdm_clk_siglen)
+pdm_clk[0:2] = v_ref
+pdm_clk[3::2] = v_ref
+pdm_clk_t = np.linspace(0, siglen_s,pdm_clk_siglen)
+
+audio_clk_siglen = int(siglen_s * fs * 2)
+audio_clk = np.zeros(audio_clk_siglen)
+audio_clk[0:2] = v_ref
+audio_clk[3::2] = v_ref
+audio_clk_t = np.linspace(0, siglen_s, audio_clk_siglen)
+
 fs_ratio = int(pdm_fs / fs)
 
-v_ref = 1.0
 y = np.zeros(siglen)
 integrator = 0
 comparator = 0
 output = 0
-dac_1_bit = [-v_ref,v_ref]
+feedback = [-v_ref,v_ref]
 
 k = 0
 for i in range(siglen):
@@ -35,12 +47,12 @@ for i in range(siglen):
             comparator = 1
         else:
             comparator = 0
-        pdm[k] = comparator
-        output = dac_1_bit[comparator]
+        pdm[k] = comparator * v_ref
+        output = feedback[comparator]
         k += 1
 
 cutoff = fs / 2
-lpf = signal.butter(1, cutoff, 'lowpass',fs=pdm_fs,output = 'sos')
+lpf = signal.butter(3, cutoff, 'lowpass',fs=pdm_fs,output = 'sos')
 
 # LPF + decimate
 z = signal.sosfilt(lpf,pdm)
@@ -51,7 +63,65 @@ plt.subplot(2,1,1)
 plt.plot(x_t,(x + 1) / 2)
 plt.step(pdm_t,pdm)
 plt.subplot(2,1,2)
-#plt.plot(x_t,(x + 1) / 2)
 plt.plot(x_t,x)
 plt.plot(x_t,z)
+
+plt.figure(2,figsize=(8,6))
+plt.step(pdm_t,pdm)
+plt.plot(x_t,x)
+plt.xlim(0,0.001)
+plt.ylim(-v_ref - 0.01, v_ref + 0.01)
+plt.legend(['PDM','Analogue signal'])
+plt.title('PDM encoding of 1kHz tone')
+plt.xlabel('Time (s)')
+plt.ylabel('Voltage (V)')
+plt.figure(3,figsize=(8,6))
+
+plt.plot(x_t,x)
+plt.step(pdm_t,pdm)
+plt.step(pdm_clk_t,pdm_clk - 1.85)
+plt.step(audio_clk_t, audio_clk - 3.70)
+plt.xlim(8.320e-5,1.0437e-4)
+plt.legend(['Analogue Audio','PDM Data','PDM Clk', 'Audio Clk'])
+plt.title('PDM')
+plt.xlabel('Time')
+plt.ylabel('Relative Voltage')
+plt.tick_params(axis='both',which='both',bottom=False,top=False,left=False,labelbottom=False,labelleft=False)
+
+X, Xf, Xdb = dsp.fft_norm(x, fs, len(x))
+Z, Zf, Zdb = dsp.fft_norm(z, fs, len(z))
+
+plt.figure(4,figsize=(8,6))
+plt.subplot(2,1,1)
+plt.title("Comparison of original signal vs decoded PDM")
+plt.plot(x_t,x)
+plt.plot(x_t,z)
+plt.legend(['Original','Decoded'])
+plt.xlim(0.0, 0.01)
+plt.ylim(-v_ref - 0.1, v_ref + 0.1)
+plt.xlabel("Time (s)")
+plt.ylabel("Amplitude (V)")
+plt.subplot(2,1,2)
+plt.semilogx(Xf,Xdb)
+plt.semilogx(Zf,Zdb)
+plt.legend(['Original','Decoded'])
+plt.xlim(10,fs/2)
+plt.ylim(-40,10)
+plt.xlabel("Frequency (Hz)")
+plt.ylabel("Magnitude (dB)")
+
+# remove DC offset
+cutoff = 20
+hpf = signal.butter(1,cutoff,'highpass',fs=fs,output='sos')
+z = signal.sosfilt(hpf,z)
+plt.figure(5,figsize=(8,6))
+plt.title("Comparison of original signal vs decoded PDM w/ DC offset removed")
+plt.plot(x_t,x)
+plt.plot(x_t,z)
+plt.legend(['Original','Decoded'])
+plt.xlim(0.0, 0.05)
+plt.ylim(-v_ref - 0.1, v_ref + 0.1)
+plt.xlabel("Time (s)")
+plt.ylabel("Amplitude (V)")
+
 plt.show()
