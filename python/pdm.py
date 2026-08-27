@@ -24,6 +24,11 @@ pdm_clk[0:2] = v_ref
 pdm_clk[3::2] = v_ref
 pdm_clk_t = np.linspace(0, siglen_s,pdm_clk_siglen)
 
+audio_clk_siglen = int(siglen_s * fs * 2)
+audio_clk = np.zeros(audio_clk_siglen)
+audio_clk[0:2] = v_ref
+audio_clk[3::2] = v_ref
+audio_clk_t = np.linspace(0, siglen_s, audio_clk_siglen)
 
 fs_ratio = int(pdm_fs / fs)
 
@@ -47,7 +52,7 @@ for i in range(siglen):
         k += 1
 
 cutoff = fs / 2
-lpf = signal.butter(1, cutoff, 'lowpass',fs=pdm_fs,output = 'sos')
+lpf = signal.butter(3, cutoff, 'lowpass',fs=pdm_fs,output = 'sos')
 
 # LPF + decimate
 z = signal.sosfilt(lpf,pdm)
@@ -75,12 +80,14 @@ plt.ylabel('Voltage (V)')
 plt.figure(3)
 
 #plt.xlim(0,0.000005)
+plt.plot(x_t,x)
 plt.step(pdm_t,pdm)
 plt.step(pdm_clk_t,pdm_clk - 1.85)
-plt.xlim(8.8188e-5,9.6e-5)
-plt.legend(['Data','Clk'])
+plt.step(audio_clk_t, audio_clk - 3.70)
+plt.xlim(8.320e-5,1.0437e-4)
+plt.legend(['Analogue Audio','PDM Data','PDM Clk', 'Audio Clk'])
 plt.title('PDM')
-#plt.xlabel('Time (s)')
-#plt.ylabel('Voltage (V)')
+plt.xlabel('Time')
+plt.ylabel('Relative Voltage')
 plt.tick_params(axis='both',which='both',bottom=False,top=False,left=False,labelbottom=False,labelleft=False)
 plt.show()
